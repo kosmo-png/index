@@ -1,64 +1,24 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Червяк 2.0 — Игры</title>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Червяк 2.0 — Игровой портал</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;min-height:100%}
-body{background:#08110b;color:#fff;font-family:Arial,sans-serif;overflow-x:hidden;overflow-y:auto!important;touch-action:auto!important}
-.top{position:sticky;top:0;z-index:20;background:rgba(8,17,11,.96);border-bottom:1px solid #26382a;padding:10px}
-.topbar{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.title{font-size:20px;font-weight:900}.buttons{display:flex;gap:8px;flex-wrap:wrap}
-.buttons button,.back{border:1px solid #405a46;background:#17271a;color:#fff;border-radius:10px;padding:9px 12px;font-weight:800}
-.intro{max-width:1100px;margin:auto;padding:28px 12px 18px;text-align:center}
-.intro h1{margin:0 0 8px;font-size:clamp(30px,7vw,58px)}.intro p{margin:0;color:#aeb9b0}
-.selector{max-width:1100px;margin:0 auto 20px;padding:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{padding:18px;border:1px solid #29422e;border-radius:18px;background:linear-gradient(145deg,#122116,#0c170f)}
-.card h2{margin:0 0 7px}.card p{color:#aeb9b0;min-height:42px}
-.play{border:0;border-radius:11px;padding:11px 15px;background:#51c967;color:#061008;font-weight:900}
-.panel{max-width:1100px;margin:0 auto 25px;padding:0 12px}
-.game{display:none;border:1px solid #29372c;border-radius:18px;overflow:hidden;background:#050805}
-.game.active{display:block}
-#wormFrame{width:100%;height:850px;border:0;display:block;background:#111}
-.dodge{min-height:650px;padding:18px;background:radial-gradient(circle at top,#19263c,#070b11 72%)}
-.dodgehead{max-width:650px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.dodgehead h2{margin:0}#score{font-weight:900}
-#canvas{display:block;width:min(600px,100%);height:auto;margin:18px auto;border-radius:18px;background:#101522;touch-action:none;box-shadow:0 10px 35px rgba(0,0,0,.55)}
-.controls{display:flex;justify-content:center;gap:18px}
-.controls button{width:105px;height:65px;border:0;border-radius:16px;background:#263b5a;color:#fff;font-size:30px;font-weight:900;touch-action:manipulation}
-.over{display:none;text-align:center;max-width:500px;margin:15px auto 0;padding:20px;border-radius:16px;background:rgba(0,0,0,.55)}
-.over button{margin:5px}.note{text-align:center;color:#93a29a;font-size:13px}
-footer{text-align:center;color:#647067;padding:10px 12px 45px}
-@media(max-width:700px){.selector{grid-template-columns:1fr}#wormFrame{height:780px}}
-@media(orientation:landscape) and (max-height:650px){#wormFrame{height:620px}}
-</style>
-</head>
-<body>
-<header class="top"><div class="topbar"><div class="title">🐛 Червяк 2.0</div><div class="buttons">
-<button onclick="openGame('worm')">🐛 Червяк</button><button onclick="openGame('dodge')">☄️ Уклонение</button>
-</div></div></header>
-
-<section class="intro"><h1>Червяк 2.0</h1><p>Две игры на одном сайте.</p></section>
-
-<section class="selector">
-<div class="card"><h2>🐛 Основная игра</h2><p>Твоя оригинальная игра со всеми её режимами.</p><button class="play" onclick="openGame('worm')">ИГРАТЬ</button></div>
-<div class="card"><h2>☄️ Уклонение</h2><p>Уворачивайся от падающих препятствий и набирай очки.</p><button class="play" onclick="openGame('dodge')">ИГРАТЬ</button></div>
-</section>
-
-<section class="panel">
-<div id="worm" class="game active"><iframe id="wormFrame" title="Червяк 2.0" srcdoc="&lt;!DOCTYPE html&gt;
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#07100b;color:#fff;font-family:Arial,sans-serif;overflow-x:hidden;overflow-y:auto}body{touch-action:pan-y}.top{position:sticky;top:0;z-index:50;background:rgba(7,16,11,.96);backdrop-filter:blur(10px);border-bottom:1px solid #28412c}.bar{max-width:1150px;margin:auto;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.brand{font-weight:1000;font-size:20px}.nav{display:flex;gap:7px;flex-wrap:wrap}.nav button,.small{background:#142318;color:#fff;border:1px solid #38533d;border-radius:11px;padding:9px 12px;font-weight:800}.hero{max-width:1150px;margin:auto;padding:25px 12px 15px;text-align:center}.hero h1{margin:0;font-size:clamp(32px,7vw,58px)}.hero p{color:#aeb9b0}.profile{max-width:1150px;margin:0 auto 15px;padding:0 12px}.profilebox{background:linear-gradient(135deg,#14241a,#0c160f);border:1px solid #304d35;border-radius:18px;padding:14px;display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center}.stat b{display:block;font-size:20px}.stat span{color:#91a296;font-size:12px}.xp{height:8px;background:#0a100c;border-radius:20px;overflow:hidden;margin-top:7px}.xp>i{display:block;height:100%;width:0;background:#63e67b}.cards{max-width:1150px;margin:0 auto 18px;padding:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid #29442e;border-radius:18px;padding:18px;background:linear-gradient(145deg,#122116,#0b140e)}.card h2{margin:0 0 8px}.card p{color:#aeb9b0;min-height:40px}.play{border:0;border-radius:11px;padding:11px 15px;background:#5ce274;color:#061008;font-weight:900}.section{max-width:1150px;margin:auto;padding:0 12px 30px}.game{display:none;border:1px solid #2a3b2d;border-radius:18px;overflow:hidden;background:#050805}.game.active{display:block}#wormFrame{display:block;width:100%;height:950px;border:0;background:#0f1a12}.space{min-height:700px;padding:18px;background:radial-gradient(circle at 50% 0,#172c48,#05080f 65%);position:relative}.space:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:55px 55px;opacity:.14;pointer-events:none}.space>*{position:relative}.shead{max-width:680px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}.shead h2{margin:0}.hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px auto;color:#dce8ff}.hud span{background:#0c1524;border:1px solid #263b58;border-radius:10px;padding:6px 9px}.shipwrap{max-width:680px;margin:auto;position:relative}.shipcanvas{display:block;width:100%;height:auto;background:rgba(3,7,14,.6);border:1px solid #263b58;border-radius:18px;touch-action:none}.scontrols{display:flex;justify-content:center;gap:18px;margin-top:12px}.scontrols button{width:105px;height:65px;border:0;border-radius:16px;background:#263b5a;color:#fff;font-size:30px;font-weight:900;touch-action:manipulation}.power{max-width:680px;margin:10px auto;text-align:center;color:#aebbd0}.over{display:none;max-width:500px;margin:12px auto;padding:18px;text-align:center;border-radius:16px;background:rgba(0,0,0,.72);border:1px solid #30476a}.over button{margin:4px}.settings{display:none;max-width:1150px;margin:0 auto 18px;padding:0 12px}.settingsbox{background:#101b13;border:1px solid #304d35;border-radius:18px;padding:15px}.settingsbox label{display:flex;justify-content:space-between;gap:10px;padding:8px 0;color:#b6c3b9}.settingsbox input,.settingsbox select{background:#17251a;color:#fff;border:1px solid #3b5740;border-radius:8px;padding:6px}.records{display:none;max-width:1150px;margin:0 auto 18px;padding:0 12px}.recordsbox{background:#101b13;border:1px solid #304d35;border-radius:18px;padding:15px}.records table{width:100%;border-collapse:collapse}.records td{padding:7px;border-bottom:1px solid #25362a}.danger{background:#5b2020;color:#fff;border:1px solid #873535;border-radius:10px;padding:8px 12px}.note{text-align:center;color:#758279;font-size:12px}.hide{display:none!important}@media(max-width:760px){.cards{grid-template-columns:1fr}.profilebox{grid-template-columns:1fr 1fr}.stat:first-child{grid-column:1/-1}#wormFrame{height:900px}}@media(orientation:landscape) and (max-height:650px){#wormFrame{height:720px}.space{min-height:560px}}
+</style></head><body>
+<header class="top"><div class="bar"><div class="brand">🐛 Червяк 2.0</div><div class="nav"><button onclick="openGame('worm')">🐛 Червяк</button><button onclick="openGame('space')">🚀 Космобой</button><button onclick="togglePanel('settings')">⚙️ Настройки</button><button onclick="togglePanel('records')">🏆 Рекорды</button></div></div></header>
+<section class="hero"><h1>🐛 Червяк 2.0</h1><p>Твой игровой портал: Червяк + космическая битва.</p></section>
+<section class="profile"><div class="profilebox"><div class="stat"><b id="level">Уровень 1</b><span>ПРОФИЛЬ</span><div class="xp"><i id="xpbar"></i></div></div><div class="stat"><b id="coins">🪙 0</b><span>МОНЕТЫ</span></div><div class="stat"><b id="totalKills">💥 0</b><span>УНИЧТОЖЕНО</span></div><div class="stat"><b id="best">🏆 0</b><span>РЕКОРД</span></div></div></section>
+<section class="cards"><div class="card"><h2>🐛 Червяк 2.0</h2><p>Все твои режимы, включая Дефенс, Чёрную дыру, Тень и Всё или ничего.</p><button class="play" onclick="openGame('worm')">ИГРАТЬ</button></div><div class="card"><h2>🚀 Космобой</h2><p>Управляй космическим кораблём, стреляй по врагам и сражайся с боссами.</p><button class="play" onclick="openGame('space')">В БОЙ</button></div></section>
+<section id="settings" class="settings"><div class="settingsbox"><h2>⚙️ Настройки</h2><label>Размер игры <input id="gameScale" type="range" min="80" max="120" value="100"></label><label>Автопауза <input id="autoPause" type="checkbox" checked></label><label>Космобой: сложность <select id="difficulty"><option value="1">Нормальная</option><option value="1.25">Сложная</option><option value="1.5">Безумная</option></select></label><button class="small" onclick="saveSettings()">Сохранить</button></div></section>
+<section id="records" class="records"><div class="recordsbox"><h2>🏆 Рекорды</h2><div id="recordText">Загрузка...</div><br><button class="danger" onclick="resetProgress()">Сбросить весь прогресс</button></div></section>
+<section class="section"><div id="wormGame" class="game active"><iframe id="wormFrame" title="Червяк 2.0" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;ru&quot;&gt;
 &lt;head&gt;
     &lt;meta charset=&quot;UTF-8&quot;&gt;
     &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, user-scalable=no&quot;&gt;
     &lt;title&gt;Червяк — Все режимы + Тень + Всё или ничего&lt;/title&gt;
     &lt;style&gt;
-        * { user-select: none; touch-action: none; box-sizing: border-box; }
-        body { margin: 0; background: #0f1a12; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: monospace; padding: 12px; touch-action: manipulation; }
+        * { user-select: none; touch-action: auto; box-sizing: border-box; }
+        body { margin: 0; background: #0f1a12; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; font-family: monospace; padding: 12px; touch-action: auto; overflow-y: auto; }
         .game-container { background: #2c281cee; border-radius: 1.5rem; padding: 8px; box-shadow: 0 0 20px black; position: relative; }
-        canvas { display: block; margin: 0 auto; border-radius: 20px; box-shadow: 0 0 0 3px #e7a551; background: #7a5838; width: 100%; height: auto; cursor: pointer; touch-action: none; }
+        canvas { display: block; margin: 0 auto; border-radius: 20px; box-shadow: 0 0 0 3px #e7a551; background: #7a5838; width: 100%; height: auto; cursor: pointer; touch-action: pan-y; }
         .info { display: flex; justify-content: space-between; background: #22201bb3; margin-top: 8px; padding: 4px 8px; border-radius: 40px; color: #ffdaaa; flex-wrap: wrap; gap: 6px; font-size: 0.6rem; }
         button { background: #5f553b; border: none; font-weight: bold; padding: 3px 8px; border-radius: 40px; color: #ffe2b5; cursor: pointer; font-size: 0.6rem; touch-action: manipulation; }
         .chair { text-align: right; font-size: 1rem; margin-top: 2px; margin-right: 5px; }
@@ -1023,7 +983,6 @@ function updateGameClassic() {
         alert(`🎉 ПОБЕДА! ${achievement} 🎉`);
         showMenu();
     }
-}
 
 function bossShoot() {
     if (!boss) return;
@@ -1514,70 +1473,57 @@ function showAchievementsMenu() {
     updateBotUI();
     showMenu();
     gameLoop();
+    if (window.parent !== window) {
+        setInterval(() =&gt; {
+            try { window.parent.postMessage({type:&quot;wormProgress&quot;, score: Number(score)||0, mode: String(gameMode||&quot;classic&quot;)}, &quot;*&quot;); } catch(e) {}
+        }, 1000);
+    }
 })();
 &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;"></iframe></div>
-<div id="dodge" class="game"><div class="dodge">
-<div class="dodgehead"><h2>☄️ Уклонение</h2><div id="score">Очки: 0</div></div>
-<canvas id="canvas"></canvas>
-<div class="controls"><button id="left">◀</button><button id="right">▶</button></div>
-<p class="note">Планшет: удерживай кнопки. Клавиатура: A/D или ←/→.</p>
-<div id="over" class="over"><h2>Игра окончена!</h2><p id="final">Очки: 0</p><button class="play" id="again">Играть снова</button><button class="back" onclick="openGame('worm')">К Червяку</button></div>
-</div></div>
-</section>
-<footer>🐛 Червяк 2.0 • ☄️ Уклонение</footer>
-
+<div id="spaceGame" class="game"><div class="space"><div class="shead"><h2>🚀 Космобой</h2><b id="spaceScore">Очки: 0</b></div><div class="hud"><span id="lives">❤️❤️❤️</span><span id="combo">Комбо ×1</span><span id="bossHud">👾 Враги</span></div><div class="shipwrap"><canvas id="spaceCanvas" class="shipcanvas" width="680" height="720"></canvas></div><div class="scontrols"><button id="sl">◀</button><button id="sr">▶</button></div><div class="power" id="power">⚡ Автоогонь • 🛡️ Щит: нет</div><div id="spaceOver" class="over"><h2>💥 Корабль уничтожен</h2><p id="spaceFinal">Очки: 0</p><button class="play" id="spaceAgain">🚀 Ещё раз</button><button class="small" onclick="openGame('worm')">🐛 К Червяку</button></div></div></div></section>
+<p class="note">Свайп по странице можно использовать для прокрутки. Управление кораблём — кнопками или A/D, ←/→.</p>
 <script>
-function openGame(name){
-  document.getElementById('worm').classList.toggle('active',name==='worm');
-  document.getElementById('dodge').classList.toggle('active',name==='dodge');
-  document.querySelector('.panel').scrollIntoView({behavior:'smooth',block:'start'});
-  if(name==='dodge') startDodge(); else stopDodge();
-}
-const c=document.getElementById('canvas'),x=c.getContext('2d');
-let p,obs=[],score=0,running=false,raf=0,timer=0;
-function size(){
-  c.width=Math.max(280,Math.min(innerWidth-48,600));
-  c.height=innerWidth>innerHeight?Math.min(innerHeight*.58,560):Math.min(innerHeight*.60,650);
-  if(p){p.y=c.height-p.h-25;p.x=Math.max(0,Math.min(p.x,c.width-p.w));}
-}
-addEventListener('resize',size);
-function startDodge(){
-  stopDodge();size();p={x:c.width/2-20,y:c.height-65,w:40,h:40,s:7,l:false,r:false};
-  obs=[];score=0;running=true;document.getElementById('score').textContent='Очки: 0';
-  document.getElementById('over').style.display='none';spawn();loop();
-}
-function stopDodge(){running=false;clearTimeout(timer);cancelAnimationFrame(raf);if(p){p.l=false;p.r=false}}
-function spawn(){
-  if(!running)return;const z=25+Math.random()*35;
-  obs.push({x:Math.random()*(c.width-z),y:-z,w:z,h:z,s:3+Math.random()*3+score/80});
-  timer=setTimeout(spawn,Math.max(180,700-score*4));
-}
-function collision(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function update(){
-  if(p.l)p.x-=p.s;if(p.r)p.x+=p.s;p.x=Math.max(0,Math.min(p.x,c.width-p.w));
-  for(let i=obs.length-1;i>=0;i--){let o=obs[i];o.y+=o.s;
-    if(collision(p,o)){gameOver();return}
-    if(o.y>c.height){obs.splice(i,1);score++;document.getElementById('score').textContent='Очки: '+score}
-  }
-}
-function draw(){
-  x.fillStyle='#101522';x.fillRect(0,0,c.width,c.height);x.strokeStyle='rgba(255,255,255,.05)';
-  for(let a=0;a<c.width;a+=40){x.beginPath();x.moveTo(a,0);x.lineTo(a,c.height);x.stroke()}
-  for(let a=0;a<c.height;a+=40){x.beginPath();x.moveTo(0,a);x.lineTo(c.width,a);x.stroke()}
-  x.fillStyle='#2196ff';x.shadowBlur=15;x.shadowColor='#2196ff';x.fillRect(p.x,p.y,p.w,p.h);x.shadowBlur=0;
-  for(const o of obs){x.fillStyle='#ff304f';x.shadowBlur=12;x.shadowColor='#ff304f';x.fillRect(o.x,o.y,o.w,o.h)}x.shadowBlur=0;
-}
-function loop(){if(!running)return;update();if(running){draw();raf=requestAnimationFrame(loop)}}
-function gameOver(){running=false;clearTimeout(timer);cancelAnimationFrame(raf);document.getElementById('final').textContent='Очки: '+score;document.getElementById('over').style.display='block'}
-function move(which,on,e){if(e)e.preventDefault();if(p)p[which]=on}
-const L=document.getElementById('left'),R=document.getElementById('right');
-[['touchstart','l',1],['touchend','l',0],['touchcancel','l',0],['mousedown','l',1],['mouseup','l',0],['mouseleave','l',0]].forEach(a=>L.addEventListener(a[0],e=>move(a[1],a[2],e),{passive:false}));
-[['touchstart','r',1],['touchend','r',0],['touchcancel','r',0],['mousedown','r',1],['mouseup','r',0],['mouseleave','r',0]].forEach(a=>R.addEventListener(a[0],e=>move(a[1],a[2],e),{passive:false}));
-document.addEventListener('keydown',e=>{if(!running)return;let k=e.key.toLowerCase();if(k==='arrowleft'||k==='a'){e.preventDefault();p.l=true}if(k==='arrowright'||k==='d'){e.preventDefault();p.r=true}});
-document.addEventListener('keyup',e=>{if(!p)return;let k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')p.l=false;if(k==='arrowright'||k==='d')p.r=false});
-document.getElementById('again').onclick=startDodge;size();
-</script>
-</body>
-</html>
+const KEY='wormPortalSaveV1';let save=JSON.parse(localStorage.getItem(KEY)||'null')||{xp:0,coins:0,kills:0,best:0,spaceBest:0,wormBest:0};
+function persist(){localStorage.setItem(KEY,JSON.stringify(save));renderProfile()}
+function level(){return Math.floor(save.xp/500)+1}function renderProfile(){let lv=level();document.getElementById('level').textContent='Уровень '+lv;document.getElementById('coins').textContent='🪙 '+save.coins;document.getElementById('totalKills').textContent='💥 '+save.kills;document.getElementById('best').textContent='🏆 '+Math.max(save.best,save.spaceBest,save.wormBest);document.getElementById('xpbar').style.width=((save.xp%500)/5)+'%';document.getElementById('recordText').innerHTML='<table><tr><td>🚀 Космобой</td><td>'+save.spaceBest+'</td></tr><tr><td>🐛 Червяк</td><td>'+save.wormBest+'</td></tr><tr><td>💥 Уничтожено</td><td>'+save.kills+'</td></tr></table>'}
+function addReward(xp,coins,kills=0){save.xp+=xp;save.coins+=coins;save.kills+=kills;persist()}
+function openGame(n){document.getElementById('wormGame').classList.toggle('active',n==='worm');document.getElementById('spaceGame').classList.toggle('active',n==='space');document.querySelector('.section').scrollIntoView({behavior:'smooth',block:'start'});if(n==='space')startSpace();else stopSpace()}
+function togglePanel(id){let e=document.getElementById(id);e.style.display=e.style.display==='block'?'none':'block'}
+function saveSettings(){let scale=document.getElementById('gameScale').value;document.getElementById('wormFrame').style.height=(950*scale/100)+'px';alert('Настройки сохранены!')}
+function resetProgress(){if(confirm('Сбросить XP, монеты и рекорды?')){save={xp:0,coins:0,kills:0,best:0,spaceBest:0,wormBest:0};persist()}}
+renderProfile();
+window.addEventListener('message',e=>{if(!e.data||e.data.type!=='wormProgress')return;let sc=e.data.score||0;if(sc>save.wormBest){let d=sc-save.wormBest;save.wormBest=sc;save.best=Math.max(save.best,sc);save.xp+=Math.floor(d/2);save.coins+=Math.floor(d/10);persist()}});
+const c=document.getElementById('spaceCanvas'),ctx=c.getContext('2d');let ship,foes=[],shots=[],enemyShots=[],stars=[],powerups=[],spaceRun=false,raf=0,spawnT=0,shootT=0,boss=null,spaceScore=0,life=3,combo=1,comboT=0,left=false,right=false,shield=0,diff=1;
+for(let i=0;i<100;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,s:.4+Math.random()*2,r:.5+Math.random()*1.4});
+function resizeSpace(){let w=Math.min(680,innerWidth-48);c.style.width=w+'px'}addEventListener('resize',resizeSpace);resizeSpace();
+function startSpace(){stopSpace();diff=+document.getElementById('difficulty').value;ship={x:c.width/2,y:c.height-80,w:48,h:58,s:6};foes=[];shots=[];enemyShots=[];powerups=[];boss=null;spaceScore=0;life=3;combo=1;comboT=0;shield=0;spaceRun=true;document.getElementById('spaceOver').style.display='none';updateHud();loopSpace()}
+function stopSpace(){spaceRun=false;cancelAnimationFrame(raf)}
+function spawnEnemy(){let types=['scout','fighter','tank'];let type=types[Math.floor(Math.random()*types.length)];let z=type==='tank'?42:32;foes.push({x:25+Math.random()*(c.width-50),y:-z,w:z,h:z,s:(1.8+Math.random()*1.7)*diff,hp:type==='tank'?3:1,type})}
+function fire(){shots.push({x:ship.x,y:ship.y-30,v:9})}
+function enemyFire(e){enemyShots.push({x:e.x,y:e.y+18,v:3.2*diff})}
+function hit(a,b){return Math.abs(a.x-b.x)<(a.w+b.w)/2&&Math.abs(a.y-b.y)<(a.h+b.h)/2}
+function killEnemy(i){let e=foes[i];foes.splice(i,1);spaceScore+=e.type==='tank'?30:10;combo=Math.min(9,combo+1);comboT=120;addReward(5,2,1);if(Math.random()<.08)powerups.push({x:e.x,y:e.y,t:Math.random()<.5?'shield':'coin'});if(spaceScore>=300&&!boss)boss={x:c.width/2,y:90,w:100,h:70,hp:30,max:30,s:1.2};}
+function damage(){if(shield>0){shield=0;return}life--;combo=1;if(life<=0){gameOverSpace();return}ship.x=c.width/2}
+function updateSpace(){if(!spaceRun)return;if(left)ship.x-=ship.s;if(right)ship.x+=ship.s;ship.x=Math.max(30,Math.min(c.width-30,ship.x));
+for(const s of stars){s.y+=s.s;if(s.y>c.height)s.y=0}
+spawnT++;if(spawnT>Math.max(18,55-spaceScore/15)){spawnT=0;spawnEnemy()}shootT++;if(shootT>10){shootT=0;fire()}
+for(let i=shots.length-1;i>=0;i--){shots[i].y-=shots[i].v;if(shots[i].y<0)shots.splice(i,1)}
+for(let i=foes.length-1;i>=0;i--){let e=foes[i];e.y+=e.s;if(Math.random()<.006*diff)enemyFire(e);if(hit(ship,e)){foes.splice(i,1);damage();continue}for(let j=shots.length-1;j>=0;j--)if(hit(shots[j],e)){shots.splice(j,1);e.hp--;if(e.hp<=0)killEnemy(i);break}if(e&&e.y>c.height+50){foes.splice(i,1);combo=1}}
+for(let i=enemyShots.length-1;i>=0;i--){let s=enemyShots[i];s.y+=s.v;if(Math.abs(s.x-ship.x)<20&&Math.abs(s.y-ship.y)<28){enemyShots.splice(i,1);damage();continue}if(s.y>c.height)enemyShots.splice(i,1)}
+for(let i=powerups.length-1;i>=0;i--){let p=powerups[i];p.y+=2;if(Math.abs(p.x-ship.x)<25&&Math.abs(p.y-ship.y)<30){if(p.t==='shield')shield=600;else addReward(0,10);powerups.splice(i,1)}else if(p.y>c.height)powerups.splice(i,1)}
+if(shield>0)shield--;if(comboT>0)comboT--;else combo=1;
+if(boss){boss.x+=Math.sin(Date.now()/700)*boss.s;for(let j=shots.length-1;j>=0;j--)if(hit(shots[j],boss)){shots.splice(j,1);boss.hp--;spaceScore+=2;if(boss.hp<=0){spaceScore+=300;boss=null;addReward(100,100,1);break}}if(Math.random()<.018*diff)enemyFire({x:boss.x,y:boss.y+20});if(Math.abs(boss.x-ship.x)<55&&Math.abs(boss.y-ship.y)<50)damage()}}
+function drawSpace(){ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#04070e';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#fff';for(const s of stars){ctx.globalAlpha=.35+s.s/3;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+for(const s of shots){ctx.fillStyle='#6df7ff';ctx.fillRect(s.x-2,s.y-12,4,14)}for(const s of enemyShots){ctx.fillStyle='#ff4f6d';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill()}
+for(const e of foes){ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle=e.type==='tank'?'#9b4dff':'#ff3f62';ctx.beginPath();ctx.moveTo(0,-e.h/2);ctx.lineTo(e.w/2,e.h/2);ctx.lineTo(0,e.h/4);ctx.lineTo(-e.w/2,e.h/2);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe45c';ctx.fillRect(-6,-3,12,6);ctx.restore()}
+for(const p of powerups){ctx.fillStyle=p.t==='shield'?'#5edbff':'#ffd34f';ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#07101a';ctx.font='bold 12px Arial';ctx.textAlign='center';ctx.fillText(p.t==='shield'?'S':'$',p.x,p.y+4)}
+if(boss){ctx.fillStyle='#7d1cff';ctx.beginPath();ctx.moveTo(boss.x,boss.y-35);ctx.lineTo(boss.x+50,boss.y+30);ctx.lineTo(boss.x,boss.y+18);ctx.lineTo(boss.x-50,boss.y+30);ctx.closePath();ctx.fill();ctx.fillStyle='#ff355d';ctx.fillRect(boss.x-50,boss.y-50,100*(boss.hp/boss.max),5)}
+ctx.save();ctx.translate(ship.x,ship.y);ctx.fillStyle=shield?'#55eaff':'#4da6ff';ctx.shadowBlur=20;ctx.shadowColor=shield?'#55eaff':'#4da6ff';ctx.beginPath();ctx.moveTo(0,-32);ctx.lineTo(25,25);ctx.lineTo(8,18);ctx.lineTo(0,30);ctx.lineTo(-8,18);ctx.lineTo(-25,25);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(8,7);ctx.lineTo(-8,7);ctx.closePath();ctx.fill();ctx.fillStyle='#ff9d3d';ctx.beginPath();ctx.moveTo(-7,25);ctx.lineTo(0,40+Math.random()*8);ctx.lineTo(7,25);ctx.fill();ctx.restore()}
+function updateHud(){document.getElementById('spaceScore').textContent='Очки: '+spaceScore;document.getElementById('lives').textContent='❤️'.repeat(Math.max(0,life))+'🖤'.repeat(3-Math.max(0,life));document.getElementById('combo').textContent='Комбо ×'+combo;document.getElementById('bossHud').textContent=boss?'👑 БОСС: '+boss.hp+' HP':'👾 Враги';document.getElementById('power').textContent='⚡ Автоогонь • '+(shield?'🛡️ Щит активен':'🛡️ Щит: нет')}
+function loopSpace(){if(!spaceRun)return;updateSpace();drawSpace();updateHud();raf=requestAnimationFrame(loopSpace)}
+function gameOverSpace(){spaceRun=false;cancelAnimationFrame(raf);save.spaceBest=Math.max(save.spaceBest,spaceScore);save.best=Math.max(save.best,spaceScore);save.xp+=Math.floor(spaceScore/2);save.coins+=Math.floor(spaceScore/20);persist();document.getElementById('spaceFinal').textContent='Очки: '+spaceScore;document.getElementById('spaceOver').style.display='block'}
+function control(which,on,e){if(e)e.preventDefault();if(which==='l')left=on;else right=on}
+[['touchstart','l',1],['touchend','l',0],['touchcancel','l',0],['mousedown','l',1],['mouseup','l',0],['mouseleave','l',0]].forEach(a=>document.getElementById('sl').addEventListener(a[0],e=>control(a[1],a[2],e),{passive:false}));[['touchstart','r',1],['touchend','r',0],['touchcancel','r',0],['mousedown','r',1],['mouseup','r',0],['mouseleave','r',0]].forEach(a=>document.getElementById('sr').addEventListener(a[0],e=>control(a[1],a[2],e),{passive:false}));document.addEventListener('keydown',e=>{if(!spaceRun)return;let k=e.key.toLowerCase();if(k==='a'||k==='arrowleft'){left=true;e.preventDefault()}if(k==='d'||k==='arrowright'){right=true;e.preventDefault()}});document.addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(k==='a'||k==='arrowleft')left=false;if(k==='d'||k==='arrowright')right=false});document.getElementById('spaceAgain').onclick=startSpace;
+</script></body></html>
