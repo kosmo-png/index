@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Червяк — Все режимы + Тень + Всё или ничего</title>
+    <style>
+        * { user-select: none; touch-action: pan-y; box-sizing: border-box; }
+        body { margin: 0; background: #0f1a12; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: monospace; padding: 12px; touch-action: manipulation; }
+        .game-container { background: #2c281cee; border-radius: 1.5rem; padding: 8px; box-shadow: 0 0 20px black; position: relative; }
+        canvas { display: block; margin: 0 auto; border-radius: 20px; box-shadow: 0 0 0 3px #e7a551; background: #7a5838; width: 100%; height: auto; cursor: pointer; touch-action: pan-y; }
+        .info { display: flex; justify-content: space-between; background: #22201bb3; margin-top: 8px; padding: 4px 8px; border-radius: 40px; color: #ffdaaa; flex-wrap: wrap; gap: 6px; font-size: 0.6rem; }
+        button { background: #5f553b; border: none; font-weight: bold; padding: 3px 8px; border-radius: 40px; color: #ffe2b5; cursor: pointer; font-size: 0.6rem; touch-action: manipulation; }
+        .chair { text-align: right; font-size: 1rem; margin-top: 2px; margin-right: 5px; }
+        .joystick { position: fixed; bottom: 10px; left: 10px; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 40px; backdrop-filter: blur(8px); z-index: 100; }
+        .joystick-base { position: absolute; width: 100%; height: 100%; background: rgba(40,40,40,0.7); border-radius: 40px; border: 2px solid #ffcc88; }
+        .joystick-thumb { position: absolute; width: 30px; height: 30px; background: #ffcc88; border-radius: 15px; top: 25px; left: 25px; box-shadow: 0 0 5px black; cursor: pointer; }
+        .joystick2 { position: fixed; bottom: 10px; right: 10px; width: 80px; height: 80px; background: rgba(0,0,0,0.5); border-radius: 40px; backdrop-filter: blur(8px); z-index: 100; display: none; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000cc; backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 300; }
+        .modal-card { background: #1f2a1a; border-radius: 40px; padding: 20px; width: 350px; text-align: center; border: 2px solid #ffb347; }
+        .menu-columns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .menu-col { background: #2a2a1a; border-radius: 30px; padding: 8px; min-width: 140px; }
+        .menu-col h3 { margin: 0 0 8px 0; color: #ffcc88; font-size: 0.8rem; }
+        .mode-btn { background: #4a623b; margin: 6px; padding: 8px; width: 90%; border-radius: 40px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 0.8rem; touch-action: manipulation; }
+        .mode-btn.hard { background: #8b3a3a; border: 1px solid #ffaa66; }
+        .mode-btn.crazy { background: #8b3a6a; border: 2px solid #ff66cc; color: #ffccff; }
+        .mode-btn.defense { background: #3a6a5a; }
+        .mode-btn.harddefense { background: #8b5a3a; border: 1px solid #ffaa66; }
+        .mode-btn.crazydefense { background: #8b3a5a; border: 2px solid #ff66cc; }
+        .mode-btn.blackhole { background: #2a0a2a; border: 2px solid #aa44ff; color: #cc88ff; }
+        .mode-btn.greed { background: #aa6600; border: 2px solid #ffcc00; color: #ffffaa; }
+        .mode-btn.freedom { background: #0066aa; border: 2px solid #00ccff; color: #aaffff; }
+        .mode-btn.apocalypse { background: #660000; border: 2px solid #ff0000; color: #ffaaaa; }
+        .mode-btn.shadow { background: #1a1a1a; border: 2px solid #ffffff; color: #ffffff; }
+        .mode-btn.allornothing { background: #660000; border: 2px solid #ffcc00; color: #ffcc00; }
+        .mode-btn.settings { background: #3a5a6a; }
+        .mode-btn.achievements { background: #6a5a3a; }
+        .mode-btn.reset { background: #8b3a3a; }
+        .settings-panel { margin-top: 10px; padding: 10px; background: #2a2a1a; border-radius: 30px; }
+        .settings-panel input { width: 80%; margin: 5px 0; }
+        .settings-panel select { width: 80%; margin: 5px 0; padding: 3px; border-radius: 20px; }
+        .tower-buttons { display: flex; gap: 3px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
+        .tower-btn { background: #4a3a2a; border: none; border-radius: 30px; padding: 3px 6px; color: #ffe2b5; font-family: monospace; font-weight: bold; font-size: 0.5rem; cursor: pointer; }
+        .tower-btn.locked { background: #2a2a1a; color: #888; cursor: not-allowed; }
+        .tower-btn.spawned { background: #6a5a3a; border: 1px solid #ffcc88; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background: #8a7a5a; } 100% { transform: scale(1); } }
+        .menu-btn { background: #4a3a2a; padding: 3px 8px; font-size: 0.6rem; }
+        .speed-icon { background: #5f4c2e; padding: 2px 6px; border-radius: 20px; font-size: 0.55rem; }
+        .boss-hp { background: #3a1a1a; padding: 2px 6px; border-radius: 20px; font-size: 0.55rem; }
+        .lightning-count { background: #3a3a5a; padding: 2px 6px; border-radius: 20px; font-size: 0.55rem; }
+        .greed-bar-container { background: #3a2a1a; border-radius: 10px; height: 8px; width: 80px; overflow: hidden; }
+        .greed-bar-fill { background: #ffcc00; height: 100%; width: 0%; transition: width 0.2s; }
+        .pause-btn { background: #6a5a3a; }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <canvas id="gameCanvas" width="500" height="600"></canvas>
+    <div class="info">
+        <span>🐛 ХЗ: <span id="scoreValue">0</span></span>
+        <span>💰 МОНЕТЫ: <span id="coinValue">0</span></span>
+        <span>❤️ <span id="livesLabel">жизни</span>: <span id="livesValue">3</span></span>
+        <span>🪑 стул: <span id="chairHpValue">-</span></span>
+        <span>⚙️ <span id="modeDisplay">классик</span></span>
+        <label class="checkbox-label"><input type="checkbox" id="botCheckbox"> 🤖 БОТ</label>
+        <div class="greed-bar-container" id="greedBarContainer" style="display:none;"><div class="greed-bar-fill" id="greedBarFill"></div></div>
+        <span class="speed-icon" id="speedStatus">⚡ норм</span>
+        <span class="boss-hp" id="bossHpDisplay">👾 БОСС: ---</span>
+        <span class="lightning-count" id="lightningCount">⚡ МОЛНИИ: 0/5</span>
+        <span id="defenseWaveInfo" style="display:none;">🌊 ВОЛНА: <span id="waveValue">0</span>/20 | 👾 <span id="waveEnemiesRemaining">0</span></span>
+        <span id="timerDisplay" style="display:none;">⏱️ 180</span>
+        <span id="waveDisplay" style="display:none;">🌊 волна: 0/30</span>
+        <button id="resetButton">⟳ заново</button>
+        <button id="menuBtn" class="menu-btn">📜 МЕНЮ</button>
+        <button id="pauseBtn" class="pause-btn" style="display:none;">⏸️ ПАУЗА</button>
+    </div>
+    <div class="chair"><span id="chairIcon">🪑</span></div>
+    <div class="tower-buttons" id="towerPanel" style="display:none">
+        <button class="tower-btn" data-tower="carpet" id="carpetBtn">🪤 КОВЁР (60)</button>
+        <button class="tower-btn" data-tower="stalagmite" id="stalagmiteBtn">🗡️ ШИП (80)</button>
+        <button class="tower-btn" data-tower="water" id="waterBtn">💧 ВОДА (150)</button>
+        <button class="tower-btn locked" data-tower="lava" id="lavaBtn">🌋 ЛАВА (220) 🔒</button>
+        <button class="tower-btn" data-tower="diamond" id="diamondBtn">💎 АЛМАЗ (180)</button>
+        <button class="tower-btn locked" data-tower="dragon" id="dragonBtn">🐉 ДРАКОН (300) 🔒</button>
+    </div>
+    <div id="extraTowersPanel" style="display: flex; gap: 3px; margin-top: 6px; flex-wrap: wrap; justify-content: center;"></div>
+</div>
+<div class="joystick" id="joystick">
+    <div class="joystick-base"></div>
+    <div class="joystick-thumb" id="joystickThumb"></div>
+</div>
+<div class="joystick2" id="attackJoystick">
+    <div class="joystick-base"></div>
+    <div class="joystick-thumb" id="attackThumb"></div>
+</div>
+<script>
+(function() {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreSpan = document.getElementById('scoreValue');
+    const coinSpan = document.getElementById('coinValue');
+    const livesSpan = document.getElementById('livesValue');
+    const chairHpSpan = document.getElementById('chairHpValue');
+    const modeDisplaySpan = document.getElementById('modeDisplay');
+    const livesLabelSpan = document.getElementById('livesLabel');
+    const speedStatusSpan = document.getElementById('speedStatus');
+    const bossHpDisplaySpan = document.getElementById('bossHpDisplay');
+    const lightningCountSpan = document.getElementById('lightningCount');
+    const waveSpan = document.getElementById('waveValue');
+    const waveEnemiesRemainingSpan = document.getElementById('waveEnemiesRemaining');
+    const defenseWaveInfo = document.getElementById('defenseWaveInfo');
+    const greedBarContainer = document.getElementById('greedBarContainer');
+    const greedBarFill = document.getElementById('greedBarFill');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const waveDisplaySpikes = document.getElementById('waveDisplay');
+    const resetBtn = document.getElementById('resetButton');
+    const menuBtn = document.getElementById('menuBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const towerPanel = document.getElementById('towerPanel');
+    const extraTowersPanel = document.getElementById('extraTowersPanel');
+    const joystickDiv = document.getElementById('joystick');
+    const attackJoystickDiv = document.getElementById('attackJoystick');
+    const lavaBtn = document.getElementById('lavaBtn');
+    const dragonBtn = document.getElementById('dragonBtn');
+    const botCheckbox = document.getElementById('botCheckbox');
+    
+    let w = 500, h = 600;
+    canvas.width = w; canvas.height = h;
+    
+    let gameMode = "classic";
+    let active = true;
+    let isPaused = false;
+    let score = 0;
+    let coins = 0;
+    let lives = 3;
+    let chairHp = 10;
+    let revives = 3;
+    let defenseCostMultiplier = 1;
+    
+    let currentBackground = localStorage.getItem('gameBackground') || 'forest';
+    let scaleEffectTimer = 0;
+    let scaleEffect = 1;
+    
+    let greed = 0;
+    let greedTimer = 0;
+    let greedMax = 100;
+    let greedEffects = { fog: false, shake: false, asteroids: false, goldenFraers: false };
+    let greedBossSpawned = false;
+    
+    let botEnabled = false;
+    let botDifficulty = 'easy';
+    let bot = { x: 400, y: 300, r: 8, speed: 0.7 };
+    
+    let items = [];
+    let bedrocks = [];
+    let obsidians = [];
+    let pickaxes = [];
+    let lightnings = [];
+    let enemies = [];
+    let fastEnemies = [];
+    let alienEnemies = [];
+    let skulls = [];
+    let towers = [];
+    let bullets = [];
+    let alienLasers = [];
+    let particles = [];
+    let boss = null;
+    
+    let attackLines = [];
+    let damageNumbers = [];
+    
+    let allOrNothingTimer = 180;
+    let spikes = [];
+    let waveCount = 0;
+    let spikeSpawnTimer = 0;
+    
+    let shadowMode = false;
+    let shadowBoss = null;
+    let shadowAttacks = [];
+    let shadowDragons = [];
+    let shadowItems = [];
+    let attackCooldown = 0;
+    let lastAttackQuality = "";
+    let attackVector = { x: 0, y: 0 };
+    let attackActive = false;
+    let wormShadowHp = 500;
+    
+    let blackHoleMode = false;
+    let blackHoleX = w/2;
+    let blackHoleY = h/2;
+    let blackHoleRadius = 120;
+    let gravityStrength = 0.25;
+    let antiGravityTimer = 0;
+    let earthquakeTimer = 0;
+    let blackHoleBossActive = false;
+    let blackHoleBoss = null;
+    let blackHoleWaveStart = 10;
+    let blackHoleWaveEnd = 20;
+    let blackHoleBossSpawned = false;
+    
+    let freedomMode = false;
+    let apocalypseMode = false;
+    
+    let defenseWave = 1;
+    let defenseWaveTotal = 0;
+    let defenseWaveRemaining = 0;
+    let defenseWaveSpawnTimer = 0;
+    let defenseBossActive = false;
+    let lavaUnlocked = false;
+    let dragonUnlocked = false;
+    
+    let invincible = false;
+    let invincibleTimer = 0;
+    let baseSpeed = 1.0;
+    let permanentSpeedBonus = 0;
+    let speedBoostTimer = 0;
+    let lastKillScore = 0;
+    let selectedTower = 'stalagmite';
+    let isDefense = false;
+    let worm = { x: w/2, y: h/2, r: 8 };
+    
+    let stickVector = { x: 0, y: 0 };
+    let stickActive = false;
+    const joystickDivEl = document.getElementById('joystick');
+    const attackJoystickEl = document.getElementById('attackJoystick');
+    const thumb = document.getElementById('joystickThumb');
+    const attackThumb = document.getElementById('attackThumb');
+    let stickCenter = { x: 0, y: 0 };
+    let attackCenter = { x: 0, y: 0 };
+    const maxDist = 25;
+    
+    let bedrockSpawnTimer = 0;
+    let skullSpawnTimer = 0;
+    
+    const defensePath = [
+        { x: 40, y: 60 }, { x: 120, y: 60 }, { x: 120, y: 150 },
+        { x: 280, y: 150 }, { x: 280, y: 220 }, { x: 460, y: 220 }
+    ];
+    
+    let extraTowersList = [];
+    let totalDeaths = parseInt(localStorage.getItem('totalDeaths')) || 0;
+    let allModesBlocked = localStorage.getItem('allModesBlocked') === 'true';
+    function updateBotUI() {
+    if (botEnabled) {
+        attackJoystickDiv.style.display = 'flex';
+    } else {
+        attackJoystickDiv.style.display = 'none';
+    }
+}
+
+botCheckbox.addEventListener('change', () => {
+    botEnabled = botCheckbox.checked;
+    updateBotUI();
+    fullReset();
+});
+
+function setBotDifficulty(level) {
+    botDifficulty = level;
+    if (level === 'easy') bot.speed = 0.7;
+    else if (level === 'medium') bot.speed = 1.0;
+    else if (level === 'hard') bot.speed = 1.5;
+    else if (level === 'impossible') bot.speed = 2.5;
+    localStorage.setItem('botDifficulty', level);
+}
+
+function updateStickPosition(clientX, clientY, center, thumbEl, vector) {
+    let dx = clientX - center.x;
+    let dy = clientY - center.y;
+    let dist = Math.hypot(dx, dy);
+    if(dist > maxDist) {
+        dx = dx / dist * maxDist;
+        dy = dy / dist * maxDist;
+    }
+    thumbEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    vector.x = dx / maxDist;
+    vector.y = dy / maxDist;
+}
+
+function onStart(e, isAttack) {
+    e.preventDefault();
+    const rect = isAttack ? attackJoystickEl.getBoundingClientRect() : joystickDivEl.getBoundingClientRect();
+    const center = isAttack ? attackCenter : stickCenter;
+    center.x = rect.left + rect.width/2;
+    center.y = rect.top + rect.height/2;
+    if(isAttack) attackActive = true;
+    else stickActive = true;
+    const point = e.touches ? e.touches[0] : e;
+    updateStickPosition(point.clientX, point.clientY, center, isAttack ? attackThumb : thumb, isAttack ? attackVector : stickVector);
+}
+
+function onMove(e, isAttack) {
+    if(isAttack && !attackActive) return;
+    if(!isAttack && !stickActive) return;
+    e.preventDefault();
+    const point = e.touches ? e.touches[0] : e;
+    const center = isAttack ? attackCenter : stickCenter;
+    updateStickPosition(point.clientX, point.clientY, center, isAttack ? attackThumb : thumb, isAttack ? attackVector : stickVector);
+}
+
+function onEnd(isAttack) {
+    if(isAttack) {
+        attackActive = false;
+        attackThumb.style.transform = `translate(0px, 0px)`;
+        attackVector = { x: 0, y: 0 };
+    } else {
+        stickActive = false;
+        thumb.style.transform = `translate(0px, 0px)`;
+        stickVector = { x: 0, y: 0 };
+    }
+}
+
+joystickDivEl.addEventListener('touchstart', (e) => onStart(e, false));
+joystickDivEl.addEventListener('touchmove', (e) => onMove(e, false));
+joystickDivEl.addEventListener('touchend', () => onEnd(false));
+attackJoystickEl.addEventListener('touchstart', (e) => onStart(e, true));
+attackJoystickEl.addEventListener('touchmove', (e) => onMove(e, true));
+attackJoystickEl.addEventListener('touchend', () => onEnd(true));
+
+function getCurrentSpeed() {
+    let bonus = permanentSpeedBonus;
+    if (speedBoostTimer > 0) bonus += 0.5;
+    return baseSpeed + bonus;
+}
+
+function updateLightningUI() {
+    let maxLightning = (gameMode === "crazy") ? 1 : 5;
+    lightningCountSpan.innerText = `⚡ МОЛНИИ: ${permanentSpeedBonus/0.5}/${maxLightning}`;
+}
+
+function updateExtraTowersUI() {
+    extraTowersPanel.innerHTML = '';
+    for (let i = 0; i < extraTowersList.length; i++) {
+        let t = extraTowersList[i];
+        let btn = document.createElement('button');
+        btn.className = 'tower-btn spawned';
+        btn.innerHTML = `${t.icon} ${t.name} (${t.cost})`;
+        btn.onclick = (function(towerData) {
+            return function() {
+                selectedTower = towerData.type;
+                alert(`🔧 выбрана башня: ${towerData.name} (стоимость ${towerData.cost})`);
+                document.querySelectorAll('.tower-btn').forEach(b => b.style.background = "#4a3a2a");
+                btn.style.background = "#6a5a3a";
+            };
+        })(t);
+        extraTowersPanel.appendChild(btn);
+    }
+}
+
+function updateTowerButtonsUI() {
+    let baseCosts = { carpet:60, stalagmite:80, water:150, lava:220, diamond:180, dragon:300 };
+    let mult = (gameMode === "harddefense") ? 2 : (gameMode === "crazydefense") ? 4 : 1;
+    if (carpetBtn) carpetBtn.innerHTML = `🪤 КОВЁР (${Math.floor(baseCosts.carpet * mult)})`;
+    if (stalagmiteBtn) stalagmiteBtn.innerHTML = `🗡️ ШИП (${Math.floor(baseCosts.stalagmite * mult)})`;
+    if (waterBtn) waterBtn.innerHTML = `💧 ВОДА (${Math.floor(baseCosts.water * mult)})`;
+    if (diamondBtn) diamondBtn.innerHTML = `💎 АЛМАЗ (${Math.floor(baseCosts.diamond * mult)})`;
+    if (lavaBtn && !lavaUnlocked) lavaBtn.innerHTML = `🌋 ЛАВА (${Math.floor(baseCosts.lava * mult)}) 🔒`;
+    else if (lavaBtn) lavaBtn.innerHTML = `🌋 ЛАВА (${Math.floor(baseCosts.lava * mult)})`;
+    if (dragonBtn && !dragonUnlocked) dragonBtn.innerHTML = `🐉 ДРАКОН (${Math.floor(baseCosts.dragon * mult)}) 🔒`;
+    else if (dragonBtn) dragonBtn.innerHTML = `🐉 ДРАКОН (${Math.floor(baseCosts.dragon * mult)})`;
+}
+
+function updateGreedUI() {
+    if (greedBarContainer) {
+        greedBarContainer.style.display = (gameMode === 'greed') ? 'flex' : 'none';
+        let percent = (greed / greedMax) * 100;
+        greedBarFill.style.width = `${percent}%`;
+        if (greed > 80) greedBarFill.style.background = "#ff3333";
+        else if (greed > 60) greedBarFill.style.background = "#ff9900";
+        else greedBarFill.style.background = "#ffcc00";
+    }
+}
+
+function updateGreed(delta) {
+    if (gameMode !== 'greed') return;
+    greed = Math.min(greedMax, Math.max(0, greed + delta));
+    updateGreedUI();
+    if (greed >= 80) {
+        greedEffects.shake = true;
+        greedEffects.fog = true;
+        if (Math.random() < 0.02 && !greedBossSpawned && greed >= 100) {
+            if (!boss && !isDefense) {
+                greedBossSpawned = true;
+                boss = { x: w/2, y: h/2 - 40, hp: 500, maxHp: 500, type: 'greedboss', shootCooldown: 0, getShootDelay: () => 15 };
+                bossHpDisplaySpan.innerText = `👑 ФРАЕР МАКСИМУС: ${boss.hp} HP`;
+                alert("👑 БОСС ЖАДНОСТИ! ФРАЕР МАКСИМУС ЯВИЛСЯ!");
+            }
+        }
+    } else if (greed >= 60) {
+        greedEffects.shake = true;
+        greedEffects.fog = false;
+        greedEffects.asteroids = true;
+    } else if (greed >= 40) {
+        greedEffects.shake = false;
+        greedEffects.fog = true;
+        greedEffects.asteroids = false;
+    } else {
+        greedEffects.shake = false;
+        greedEffects.fog = false;
+        greedEffects.asteroids = false;
+    }
+}
+
+function triggerScaleEffect() { scaleEffect = 1.3; scaleEffectTimer = 15; }
+
+function showAchievement(achievement) {
+    alert(`🏆 ДОСТИЖЕНИЕ: ${achievement} 🏆`);
+    localStorage.setItem(`${gameMode}_achievement`, 'true');
+}
+
+function tryDropArtifact(x, y) {}
+
+window.obsidianCount = 0;
+function spawnItem() { items.push({ x: 30+Math.random()*(w-60), y: 20+Math.random()*(h-40), r: 7, baseR:7 }); }
+function spawnBedrock() { if (Math.random() < 0.15) bedrocks.push({ x: 30+Math.random()*(w-60), y: 20+Math.random()*(h-40), r: 10, baseR:10 }); }
+function spawnObsidian() { if (gameMode === "crazy" && Math.random() < 0.02) obsidians.push({ x: 30+Math.random()*(w-60), y: 20+Math.random()*(h-40), r: 9, baseR:9 }); }
+function spawnPickaxe() { if (gameMode !== "crazy" && Math.random() < 0.01) pickaxes.push({ x: 30+Math.random()*(w-60), y: 20+Math.random()*(h-40), r: 8, baseR:8 }); }
+function spawnLightning() { if (permanentSpeedBonus/0.5 < 5 && Math.random() < 0.008) lightnings.push({ x: 30+Math.random()*(w-60), y: 20+Math.random()*(h-40), r: 8, baseR:8 }); }
+function spawnEnemy() {
+    if(isDefense) return;
+    let limit = (gameMode === "hard") ? 2 : (gameMode === "crazy") ? 1 : 5;
+    if (enemies.length >= limit) return;
+    let side = Math.floor(Math.random()*4);
+    let x, y;
+    if(side===0) { x = 20+Math.random()*(w-40); y = 8; }
+    else if(side===1) { x = w-10; y = 20+Math.random()*(h-40); }
+    else if(side===2) { x = 20+Math.random()*(w-40); y = h-10; }
+    else { x = 8; y = 20+Math.random()*(h-40); }
+    enemies.push({ x, y, r: 10, speed: 0.6 });
+}
+function spawnFastEnemy() {
+    if(isDefense) return;
+    if ((gameMode === "hard" || gameMode === "crazy") && score >= 100 && fastEnemies.length < 2) {
+        let side = Math.floor(Math.random()*4);
+        let x, y;
+        if(side===0) { x = 20+Math.random()*(w-40); y = 8; }
+        else if(side===1) { x = w-10; y = 20+Math.random()*(h-40); }
+        else if(side===2) { x = 20+Math.random()*(w-40); y = h-10; }
+        else { x = 8; y = 20+Math.random()*(h-40); }
+        fastEnemies.push({ x, y, r: 10, speed: 1.0 });
+    }
+}
+function spawnAlienEnemy() {
+    if (gameMode === "crazy" && alienEnemies.length < 3) {
+        let side = Math.floor(Math.random()*4);
+        let x, y;
+        if(side===0) { x = 20+Math.random()*(w-40); y = 8; }
+        else if(side===1) { x = w-10; y = 20+Math.random()*(h-40); }
+        else if(side===2) { x = 20+Math.random()*(w-40); y = h-10; }
+        else { x = 8; y = 20+Math.random()*(h-40); }
+        alienEnemies.push({ x, y, r: 12, speed: 1.5, obsidianCount: 0, shootCooldown: 0, directionAngle: 0 });
+    }
+}
+
+function addTower(type, x, y) {
+    if (!isDefense) return false;
+    let baseCost = { carpet:60, stalagmite:80, water:150, lava:220, diamond:180, dragon:300, obsidian:200, absolutedragon:500 }[type];
+    let mult = (gameMode === "harddefense") ? 2 : (gameMode === "crazydefense") ? 4 : 1;
+    let cost = baseCost * mult;
+    if ((type === 'lava' && !lavaUnlocked) || (type === 'dragon' && !dragonUnlocked)) {
+        alert("❌ Башня ещё не разблокирована!"); return false;
+    }
+    if(score >= cost) {
+        score -= cost;
+        let tower = { type, x, y, cooldown: 0, range: 60 };
+        if(type === 'diamond') tower.damage = 3;
+        if(type === 'dragon') tower.damage = 5;
+        if(type === 'lava') tower.damage = 1;
+        if(type === 'water') tower.damage = 0;
+        if(type === 'stalagmite') tower.damage = 2;
+        if(type === 'carpet') tower.damage = 0;
+        if(type === 'obsidian') tower.damage = 10;
+        if(type === 'absolutedragon') tower.damage = 7;
+        tower.hp = (type === 'carpet' ? 5 : type === 'stalagmite' ? 10 : type === 'water' ? 0 : type === 'lava' ? 20 : type === 'diamond' ? 30 : type === 'dragon' ? 100 : type === 'obsidian' ? 200 : type === 'absolutedragon' ? 500 : 100);
+        tower.maxHp = tower.hp;
+        towers.push(tower);
+        updateUI();
+        return true;
+    }
+    alert(`❌ не хватает очков (нужно ${cost})`);
+    return false;
+}
+
+function updateUI() {
+    scoreSpan.innerText = Math.floor(score);
+    coinSpan.innerText = coins;
+    if(isDefense) { livesSpan.innerText = chairHp; chairHpSpan.innerText = chairHp; }
+    else { livesSpan.innerText = lives; }
+}
+function getWaveEnemiesCount(wave) {
+    if (blackHoleMode && wave >= blackHoleWaveStart && wave < blackHoleWaveEnd) return 5;
+    if (wave === 20) return 1;
+    if (wave >= 15) return 8;
+    if (wave >= 8) return 6;
+    return 5;
+}
+
+function getEnemyTypeForWave(wave) {
+    if (blackHoleMode && wave === blackHoleWaveEnd) return 'blackholeboss';
+    if (wave === 20) return 'blackholeboss';
+    if (wave >= 12) return 'fast';
+    return 'normal';
+}
+
+function spawnDefenseEnemy(type) {
+    let x = defensePath[0].x, y = defensePath[0].y;
+    if (type === 'normal') {
+        enemies.push({ x, y, r: 10, speed: 0.6, pathIndex: 1, hp: 10, maxHp: 10, reward: 15, type: 'normal' });
+    } else if (type === 'fast') {
+        enemies.push({ x, y, r: 10, speed: 0.9, pathIndex: 1, hp: 20, maxHp: 20, reward: 25, type: 'fast' });
+    } else if (type === 'blackholeboss') {
+        blackHoleBossActive = true;
+        blackHoleBoss = { x: w/2, y: h/2 - 50, hp: 5000, maxHp: 5000, reward: 1000, type: 'blackholeboss', attackCooldown: 0, targetTower: null };
+        enemies.push(blackHoleBoss);
+    }
+}
+
+function startDefenseWave() {
+    if (defenseWave > 20) {
+        showAchievement("ПОВЕЛИТЕЛЬ ВСЕЛЕННЫХ");
+        active = false;
+        showMenu();
+        return;
+    }
+    if (defenseWave === blackHoleWaveStart && !blackHoleMode) {
+        blackHoleMode = true;
+        earthquakeTimer = 30;
+        currentBackground = 'space';
+        alert("🌍 ЗЕМЛЕТРЯСЕНИЕ! 🌍\nПространство искажается... Чёрная дыра пробудилась!");
+        for (let i = 0; i < 20; i++) particles.push({ x: Math.random() * w, y: Math.random() * h, timer: 30, big: true });
+        let angle = Math.random() * Math.PI * 2;
+        let distance = 120 + Math.random() * 80;
+        worm.x = blackHoleX + Math.cos(angle) * distance;
+        worm.y = blackHoleY + Math.sin(angle) * distance;
+        worm.x = Math.min(Math.max(worm.x, 30), w - 30);
+        worm.y = Math.min(Math.max(worm.y, 30), h - 30);
+        invincible = true;
+        invincibleTimer = 180;
+        speedStatusSpan.innerText = "🛡️ НЕУЯЗВИМ (3 сек)";
+        enemies = [];
+        defenseWaveRemaining = 0;
+        defenseWave = 20;
+        blackHoleBossSpawned = false;
+        waveSpan.innerText = `20/20`;
+        waveEnemiesRemainingSpan.innerText = "0";
+        defenseWaveInfo.style.display = "none";
+        blackHoleBossSpawned = true;
+        spawnDefenseEnemy('blackholeboss');
+        return;
+    }
+    defenseWaveTotal = getWaveEnemiesCount(defenseWave);
+    defenseWaveRemaining = defenseWaveTotal;
+    waveSpan.innerText = `${defenseWave}/20`;
+    waveEnemiesRemainingSpan.innerText = defenseWaveRemaining;
+    defenseWaveSpawnTimer = 0;
+    if (defenseWaveTotal === 1) {
+        let type = getEnemyTypeForWave(defenseWave);
+        spawnDefenseEnemy(type);
+        defenseWaveRemaining--;
+        waveEnemiesRemainingSpan.innerText = defenseWaveRemaining;
+    }
+}
+
+function checkDefenseWaveComplete() {
+    if (defenseWaveRemaining === 0 && enemies.length === 0 && !defenseBossActive && !blackHoleBossActive && active && !isPaused && isDefense && !blackHoleMode) {
+        if (defenseWave === 20) {
+            showAchievement("Защитник");
+            localStorage.setItem('defenseWin', 'true');
+            alert("🏆 ПОБЕДА! Ты прошёл Дефенс! 🏆\nДостижение: Защитник");
+            active = false;
+            showMenu();
+            return;
+        }
+        defenseWave++;
+        if (defenseWave === 10) { lavaUnlocked = true; lavaBtn.classList.remove('locked'); updateTowerButtonsUI(); alert("🔥 ЛАВА РАЗБЛОКИРОВАНА! 🔥"); }
+        if (defenseWave === 15) { dragonUnlocked = true; dragonBtn.classList.remove('locked'); updateTowerButtonsUI(); alert("🐉 ДРАКОН РАЗБЛОКИРОВАН! 🐉"); }
+        startDefenseWave();
+    }
+}
+
+function showSpinResult() {
+    let spinCost = 500;
+    if (score < spinCost) { alert(`❌ Не хватает ${spinCost} очков для прокрута!`); return; }
+    score -= spinCost; updateUI();
+    let rand = Math.random() * 100;
+    if (rand < 1) {
+        for (let e of enemies) { e.hp -= 20; e.speed = Math.max(0.3, e.speed * 0.5); }
+        enemies = enemies.filter(e => e.hp > 0);
+        alert("💥 БЕДРОК! АОЕ 20 урона и замедление!");
+    } else if (rand < 51) { score += 200; updateUI(); alert("✨ +200 очков!"); }
+    else if (rand < 71) { let newTower = { type: 'obsidian', name: 'ОБСИДИАН', icon: '🔮', cost: 200, damage: 10, hp: 200 }; extraTowersList.push(newTower); updateExtraTowersUI(); alert("🔮 ОБСИДИАН! Новая башня добавлена в панель!"); }
+    else if (rand < 85) { let newTower = { type: 'diamond', name: 'АЛМАЗ', icon: '💎', cost: 180, damage: 3, hp: 30 }; extraTowersList.push(newTower); updateExtraTowersUI(); alert("💎 АЛМАЗ! Новая башня добавлена в панель!"); }
+    else if (rand < 95) { let newTower = { type: 'stalagmite', name: 'ШИП', icon: '🗡️', cost: 80, damage: 2, hp: 10 }; extraTowersList.push(newTower); updateExtraTowersUI(); alert("🗡️ ШИП! Новая башня добавлена в панель!"); }
+    else { let newTower = { type: 'absolutedragon', name: 'ДРАКОН АБСОЛЮТ', icon: '🐉🔥', cost: 500, damage: 7, hp: 500 }; extraTowersList.push(newTower); updateExtraTowersUI(); alert("🐉 ДРАКОН АБСОЛЮТ! Новая башня добавлена в панель!"); }
+}
+
+function togglePause() {
+    if(!active || !isDefense) return;
+    isPaused = !isPaused;
+    pauseBtn.innerHTML = isPaused ? "▶️ ПРОДОЛЖИТЬ" : "⏸️ ПАУЗА";
+    if(isPaused) {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `<div class="modal-card"><h2 style="color:#ffcc88;">⏸️ ПАУЗА</h2><button class="mode-btn" id="resumeBtn">▶️ ПРОДОЛЖИТЬ</button><button class="mode-btn" id="spinBtn">🎰 ПРОКРУТ (500 очков)</button><button class="mode-btn" id="quitBtn">🚪 ВЫЙТИ В МЕНЮ</button></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('#resumeBtn').onclick = () => { modalDiv.remove(); togglePause(); };
+        modalDiv.querySelector('#spinBtn').onclick = () => { showSpinResult(); modalDiv.remove(); togglePause(); };
+        modalDiv.querySelector('#quitBtn').onclick = () => { modalDiv.remove(); showMenu(); };
+    }
+}
+function updateAllOrNothing() {
+    if (!active) return;
+    if (worm.invincibleTimer > 0) worm.invincibleTimer--;
+    
+    let spd = 3;
+    if (stickActive && (stickVector.x !== 0 || stickVector.y !== 0)) {
+        worm.x += stickVector.x * spd;
+        worm.y += stickVector.y * spd;
+    }
+    worm.x = Math.min(Math.max(worm.x, 15), w-15);
+    worm.y = Math.min(Math.max(worm.y, 15), h-15);
+    
+    if (allOrNothingTimer <= 0) {
+        active = false;
+        localStorage.setItem('allModesBlocked', 'false');
+        allModesBlocked = false;
+        alert("ПОБЕДА! Ты получил достижение 'КАК?' и все обычные достижения разблокированы!");
+        showMenu();
+        return;
+    }
+    
+    allOrNothingTimer -= 1/60;
+    timerDisplay.innerText = `⏱️ ${Math.ceil(allOrNothingTimer)}`;
+    
+    spikeSpawnTimer++;
+    if (spikeSpawnTimer >= 45) {
+        spikeSpawnTimer = 0;
+        waveCount++;
+        waveDisplaySpikes.innerText = `🌊 волна: ${waveCount}/30`;
+        for (let i = 0; i < 3; i++) {
+            spikes.push({ x: 20 + Math.random() * (w-40), y: 0, r: 8, speed: 5 });
+        }
+    }
+    
+    for (let i=0; i<spikes.length; i++) {
+        spikes[i].y += spikes[i].speed;
+        if (Math.hypot(worm.x - spikes[i].x, worm.y - spikes[i].y) < 15 && worm.invincibleTimer === 0) {
+            worm.hp--;
+            livesSpan.innerText = worm.hp;
+            worm.invincibleTimer = 30;
+            spikes.splice(i,1);
+            i--;
+            if (worm.hp <= 0) {
+                if (revives > 0) {
+                    revives--;
+                    worm.hp = 3;
+                    livesSpan.innerText = "3";
+                    worm.x = w/2;
+                    worm.y = h/2;
+                    worm.invincibleTimer = 60;
+                } else {
+                    active = false;
+                    totalDeaths++;
+                    localStorage.setItem('totalDeaths', totalDeaths);
+                    localStorage.setItem('allModesBlocked', 'true');
+                    allModesBlocked = true;
+                    alert("ТЫ ПРОИГРАЛ! ВСЕ РЕЖИМЫ ЗАБЛОКИРОВАНЫ.");
+                    showMenu();
+                    return;
+                }
+            }
+        }
+        if (spikes[i] && spikes[i].y > h) {
+            spikes.splice(i,1);
+            i--;
+        }
+    }
+    
+    if (waveCount >= 30 && spikes.length === 0) {
+        active = false;
+        localStorage.setItem('allModesBlocked', 'false');
+        allModesBlocked = false;
+        alert("ПОБЕДА! Ты получил достижение 'КАК?' и все обычные достижения разблокированы!");
+        showMenu();
+    }
+}
+function updateShadow() {
+    if (!active) return;
+    if (worm.invincibleTimer > 0) worm.invincibleTimer--;
+    
+    let spd = 3;
+    if (stickActive && (stickVector.x !== 0 || stickVector.y !== 0)) {
+        worm.x += stickVector.x * spd;
+        worm.y += stickVector.y * spd;
+    }
+    worm.x = Math.min(Math.max(worm.x, 15), w-15);
+    worm.y = Math.min(Math.max(worm.y, 15), h-15);
+    
+    if (attackCooldown > 0) attackCooldown--;
+    if (attackActive && (attackVector.x !== 0 || attackVector.y !== 0) && attackCooldown === 0) {
+        let quality = Math.random();
+        let damage = 100;
+        if (quality < 0.1) { damage = 300; lastAttackQuality = "PERFECT!"; }
+        else if (quality < 0.4) { damage = 100; lastAttackQuality = "MEDIUM"; }
+        else { damage = 50; lastAttackQuality = "NORMAL"; }
+        if (Math.random() < 0.01) { damage = 5; lastAttackQuality = "ВЗГЛЯД!"; }
+        shadowBoss.hp -= damage;
+        bossHpDisplaySpan.innerText = `👾 БОСС: ${Math.max(0, shadowBoss.hp)} HP`;
+        attackCooldown = 30;
+    }
+    
+    if (shadowBoss.attackTimer <= 0 && shadowBoss.hp > 0) {
+        let type = Math.random();
+        if (type < 0.6) {
+            let side = Math.floor(Math.random() * 4);
+            let x, y, ww, hh;
+            if (side === 0) { x = 0; y = 0; ww = w; hh = 20; }
+            else if (side === 1) { x = 0; y = h-20; ww = w; hh = 20; }
+            else if (side === 2) { x = 0; y = 0; ww = 20; hh = h; }
+            else { x = w-20; y = 0; ww = 20; hh = h; }
+            shadowAttacks.push({ type: 'scratch', x, y, ww, hh, timer: 30 });
+        } else if (type < 0.9) {
+            shadowAttacks.push({ type: 'laser', x: shadowBoss.x, y: shadowBoss.y, angle: Math.atan2(worm.y - shadowBoss.y, worm.x - shadowBoss.x), timer: 60 });
+        } else if (type < 0.95 && shadowDragons.length < 2) {
+            let dir = Math.random() < 0.5 ? 1 : -1;
+            shadowDragons.push({ x: w/2, y: h/2, dir: dir, timer: 120 });
+        }
+        shadowBoss.attackTimer = 30 + Math.random() * 30;
+    } else if (shadowBoss.attackTimer > 0) {
+        shadowBoss.attackTimer--;
+    }
+    
+    for (let i=0; i<shadowAttacks.length; i++) {
+        let a = shadowAttacks[i];
+        a.timer--;
+        if (a.type === 'laser') {
+            let dx = Math.cos(a.angle) * 8;
+            let dy = Math.sin(a.angle) * 8;
+            a.x += dx;
+            a.y += dy;
+            if (Math.hypot(worm.x - a.x, worm.y - a.y) < 12 && worm.invincibleTimer === 0) {
+                wormShadowHp -= 20;
+                livesSpan.innerText = wormShadowHp;
+                worm.invincibleTimer = 30;
+                if (wormShadowHp <= 0) { active = false; alert("ТЫ ПОГИБ!"); showMenu(); return; }
+            }
+        } else if (a.type === 'scratch') {
+            if (worm.x > a.x && worm.x < a.x + a.ww && worm.y > a.y && worm.y < a.y + a.hh && worm.invincibleTimer === 0) {
+                wormShadowHp -= 15;
+                livesSpan.innerText = wormShadowHp;
+                worm.invincibleTimer = 30;
+                if (wormShadowHp <= 0) { active = false; alert("ТЫ ПОГИБ!"); showMenu(); return; }
+            }
+        }
+        if (a.timer <= 0) { shadowAttacks.splice(i,1); i--; }
+    }
+    
+    for (let i=0; i<shadowDragons.length; i++) {
+        let d = shadowDragons[i];
+        d.timer--;
+        if (d.timer % 30 === 0) {
+            let laserAngle = d.dir === 1 ? 0 : Math.PI;
+            shadowAttacks.push({ type: 'laser', x: d.x, y: d.y, angle: laserAngle, timer: 60 });
+        }
+        if (d.timer <= 0) { shadowDragons.splice(i,1); i--; }
+    }
+    
+    if (shadowItems.length < 2 && Math.random() < 0.01) {
+        shadowItems.push({ x: 30 + Math.random() * (w-60), y: 30 + Math.random() * (h-60), r: 6 });
+    }
+    for (let i=0; i<shadowItems.length; i++) {
+        if (Math.hypot(worm.x - shadowItems[i].x, worm.y - shadowItems[i].y) < 12) {
+            wormShadowHp = Math.min(500, wormShadowHp + 10);
+            livesSpan.innerText = wormShadowHp;
+            shadowItems.splice(i,1);
+            i--;
+        }
+    }
+    
+    if (shadowBoss.hp <= 0) { active = false; alert("ПОБЕДА! ТЫ ОДОЛЕЛ ТЕНЬ!"); showMenu(); }
+}
+function updateGameClassic() {
+    if (!active || isPaused) return;
+    if (scaleEffectTimer > 0) { scaleEffectTimer--; if (scaleEffectTimer === 0) scaleEffect = 1; else scaleEffect = 1.3; }
+    if (invincible) { invincibleTimer--; if (invincibleTimer <= 0) invincible = false; }
+    if (speedBoostTimer > 0) { speedBoostTimer--; if (speedBoostTimer <= 0) speedStatusSpan.innerText = "⚡ норм"; else speedStatusSpan.innerText = "⚡ УСКОРЕНИЕ!"; }
+    
+    let currentSpeed = getCurrentSpeed();
+    if (stickActive && (stickVector.x !== 0 || stickVector.y !== 0)) {
+        worm.x += stickVector.x * currentSpeed;
+        worm.y += stickVector.y * currentSpeed;
+    }
+    worm.x = Math.min(Math.max(worm.x, 12), w-12);
+    worm.y = Math.min(Math.max(worm.y, 12), h-12);
+    
+    // Сбор предметов
+    for (let i=0; i<items.length; i++) {
+        if (Math.hypot(worm.x - items[i].x, worm.y - items[i].y) < 15) {
+            items.splice(i,1); score++; scoreSpan.innerText = score; triggerScaleEffect(); spawnItem(); updateGreed(1);
+            if (enemies.length < 5 && Math.random()<0.02) spawnEnemy();
+            if (gameMode === "hard" && fastEnemies.length < 2 && Math.random()<0.01) spawnFastEnemy();
+            if (gameMode === "crazy" && alienEnemies.length < 3 && Math.random()<0.015) spawnAlienEnemy();
+            break;
+        }
+    }
+    
+    for (let i=0; i<pickaxes.length; i++) {
+        if (Math.hypot(worm.x - pickaxes[i].x, worm.y - pickaxes[i].y) < 15) {
+            pickaxes.splice(i,1); speedBoostTimer = 300; speedStatusSpan.innerText = "⚡ УСКОРЕНИЕ!"; triggerScaleEffect(); spawnPickaxe(); updateGreed(2);
+            break;
+        }
+    }
+    
+    for (let i=0; i<lightnings.length; i++) {
+        if (Math.hypot(worm.x - lightnings[i].x, worm.y - lightnings[i].y) < 15) {
+            lightnings.splice(i,1); if (permanentSpeedBonus/0.5 < 5) { permanentSpeedBonus += 0.5; updateLightningUI(); }
+            triggerScaleEffect(); spawnLightning(); updateGreed(2);
+            break;
+        }
+    }
+    
+    for (let i=0; i<obsidians.length; i++) {
+        if (Math.hypot(worm.x - obsidians[i].x, worm.y - obsidians[i].y) < 15) {
+            obsidians.splice(i,1); window.obsidianCount++; triggerScaleEffect(); updateGreed(5);
+            if (gameMode === "crazy" && boss) { boss.hp--; bossHpDisplaySpan.innerText = `👾 БОСС: ${boss.hp} HP`; if (boss.hp <= 0) { boss = null; bossHpDisplaySpan.innerText = `👾 БОСС: ПОВЕРЖЕН`; score += 100; scoreSpan.innerText = score; } }
+            spawnObsidian();
+            break;
+        }
+    }
+    
+    for (let i=0; i<bedrocks.length; i++) {
+        if (Math.hypot(worm.x - bedrocks[i].x, worm.y - bedrocks[i].y) < 18) {
+            bedrocks.splice(i,1); score += 50; coins += 10; scoreSpan.innerText = score; coinSpan.innerText = coins; triggerScaleEffect(); updateGreed(10);
+            if (boss && gameMode !== "crazy") { boss.hp--; bossHpDisplaySpan.innerText = `👾 БОСС: ${boss.hp} HP`; if (boss.hp <= 0) { boss = null; bossHpDisplaySpan.innerText = `👾 БОСС: ПОВЕРЖЕН`; score += 100; scoreSpan.innerText = score; } }
+            break;
+        }
+    }
+    
+    for (let i=0; i<skulls.length; i++) {
+        if (Math.hypot(worm.x - skulls[i].x, worm.y - skulls[i].y) < 15) {
+            skulls.splice(i,1); triggerScaleEffect(); updateGreed(-5);
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; }
+            else if (revives > 0) { if (confirm(`💀 ЧЕРЕП УБИЛ ТЕБЯ! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            break;
+        }
+    }
+    
+    if (score - lastKillScore >= 10 && (enemies.length > 0 || fastEnemies.length > 0 || alienEnemies.length > 0)) {
+        lastKillScore += 10;
+        if (enemies.length > 0) enemies.pop();
+        else if (fastEnemies.length > 0) fastEnemies.pop();
+        else if (alienEnemies.length > 0) alienEnemies.pop();
+        updateGreed(-1);
+    }
+    
+    // Движение врагов
+    for (let i=0; i<enemies.length; i++) {
+        let e = enemies[i];
+        let distToWorm = Math.hypot(worm.x - e.x, worm.y - e.y);
+        if (!invincible && distToWorm < 18) {
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; updateGreed(-10); }
+            else if (revives > 0) { if (confirm(`💀 ТЫ ПОГИБ! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            return;
+        }
+        let ang = Math.atan2(worm.y - e.y, worm.x - e.x);
+        e.x += Math.cos(ang) * e.speed;
+        e.y += Math.sin(ang) * e.speed;
+        e.x = Math.min(Math.max(e.x, 8), w-8);
+        e.y = Math.min(Math.max(e.y, 8), h-8);
+    }
+    
+    for (let i=0; i<fastEnemies.length; i++) {
+        let e = fastEnemies[i];
+        let distToWorm = Math.hypot(worm.x - e.x, worm.y - e.y);
+        if (!invincible && distToWorm < 18) {
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; updateGreed(-10); }
+            else if (revives > 0) { if (confirm(`💀 ТЫ ПОГИБ! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            return;
+        }
+        let ang = Math.atan2(worm.y - e.y, worm.x - e.x);
+        e.x += Math.cos(ang) * e.speed;
+        e.y += Math.sin(ang) * e.speed;
+        e.x = Math.min(Math.max(e.x, 8), w-8);
+        e.y = Math.min(Math.max(e.y, 8), h-8);
+    }
+}
+    for (let i=0; i<alienEnemies.length; i++) {
+        let a = alienEnemies[i];
+        let distToWorm = Math.hypot(worm.x - a.x, worm.y - a.y);
+        let ang = Math.atan2(worm.y - a.y, worm.x - a.x);
+        a.directionAngle = ang;
+        a.x += Math.cos(ang) * a.speed;
+        a.y += Math.sin(ang) * a.speed;
+        a.x = Math.min(Math.max(a.x, 8), w-8);
+        a.y = Math.min(Math.max(a.y, 8), h-8);
+        
+        if (a.shootCooldown <= 0) {
+            a.shootCooldown = 300;
+            let laserDirX = Math.cos(a.directionAngle);
+            let laserDirY = Math.sin(a.directionAngle);
+            alienLasers.push({ x: a.x, y: a.y, vx: laserDirX * 2, vy: laserDirY * 2, timer: 60 });
+        } else { a.shootCooldown--; }
+        
+        if (!invincible && distToWorm < 20) {
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; updateGreed(-10); }
+            else if (revives > 0) { if (confirm(`💀 ТЫ ПОГИБ! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            return;
+        }
+        if (window.obsidianCount >= 2) { alienEnemies.splice(i,1); window.obsidianCount -= 2; score += 50; scoreSpan.innerText = score; i--; }
+    }
+    
+    for (let i=0; i<alienLasers.length; i++) {
+        let laser = alienLasers[i];
+        laser.x += laser.vx;
+        laser.y += laser.vy;
+        laser.timer--;
+        if (laser.timer <= 0 || laser.x < 0 || laser.x > w || laser.y < 0 || laser.y > h) { alienLasers.splice(i,1); i--; continue; }
+        if (!invincible && Math.hypot(worm.x - laser.x, worm.y - laser.y) < 12) {
+            alienLasers.splice(i,1);
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; updateGreed(-5); }
+            else if (revives > 0) { if (confirm(`💀 ТЫ ПОГИБ ОТ ЛАЗЕРА! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            break;
+        }
+    }
+    
+    if (boss) {
+        if (boss.shootCooldown <= 0) { bossShoot(); boss.shootCooldown = boss.getShootDelay(); }
+        else { boss.shootCooldown--; }
+    }
+    
+    for (let i=0; i<bullets.length; i++) {
+        let bull = bullets[i];
+        bull.x += bull.vx;
+        bull.y += bull.vy;
+        if (bull.x < 0 || bull.x > w || bull.y < 0 || bull.y > h) { bullets.splice(i,1); i--; continue; }
+        if (!invincible && Math.hypot(worm.x - bull.x, worm.y - bull.y) < 12) {
+            bullets.splice(i,1);
+            if (lives > 1) { lives--; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; updateGreed(-5); }
+            else if (revives > 0) { if (confirm(`💀 ТЫ ПОГИБ ОТ БОССА! Осталось возрождений: ${revives}\nВоскреснуть?`)) { revives--; lives = 3; livesSpan.innerText = lives; worm.x = w/2; worm.y = h/2; invincible = true; invincibleTimer = 180; enemies = []; fastEnemies = []; alienEnemies = []; bullets = []; alienLasers = []; } else { active = false; alert("GAME OVER"); } }
+            else { active = false; alert("GAME OVER"); }
+            break;
+        }
+    }
+    
+    bedrockSpawnTimer++; let spawnDelayFrames = (gameMode === "crazy") ? 300 : 180;
+    if (bedrockSpawnTimer >= spawnDelayFrames) { bedrockSpawnTimer = 0; if (bedrocks.length < 3) spawnBedrock(); }
+    if (gameMode === "crazy") { skullSpawnTimer++; if (skullSpawnTimer >= 600 && skulls.length < 5) { skullSpawnTimer = 0; skulls.push({ x: 30+Math.random()*(w-60), y: 30+Math.random()*(h-60), r: 8 }); } }
+    
+    if(items.length < 5 && Math.random()<0.03) spawnItem();
+    if(pickaxes.length < 1 && Math.random()<0.01) spawnPickaxe();
+    if(lightnings.length < 1 && Math.random()<0.008) spawnLightning();
+    if(gameMode === "crazy" && obsidians.length < 3 && Math.random()<0.02) spawnObsidian();
+    if(enemies.length < 5 && Math.random()<0.01) spawnEnemy();
+    if(gameMode === "hard" && score >= 100 && fastEnemies.length < 2 && Math.random()<0.005) spawnFastEnemy();
+    if(gameMode === "crazy" && alienEnemies.length < 3 && Math.random()<0.01) spawnAlienEnemy();
+    
+    greedTimer++; if (greedTimer > 120 && stickVector.x === 0 && stickVector.y === 0) { updateGreed(-1); greedTimer = 0; }
+    if (greedEffects.fog) { ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0, 0, w, h); }
+    if (greedEffects.asteroids && Math.random() < 0.005) {
+        let asteroid = { x: Math.random() * w, y: 0, r: 8, speed: 3 };
+        particles.push(asteroid);
+        for (let t of towers) { if (Math.hypot(asteroid.x - t.x, asteroid.y - t.y) < 20) { t.hp = (t.hp || 0) - 20; if (t.hp <= 0) towers.splice(towers.indexOf(t), 1); } }
+    }
+    
+    if (score >= 1000 && active) {
+        active = false;
+        let achievement = (gameMode === "classic") ? "хорошо!" : (gameMode === "hard") ? "победитель" : "БОГ";
+        showAchievement(achievement);
+        alert(`🎉 ПОБЕДА! ${achievement} 🎉`);
+        showMenu();
+    }
+}
+
+function bossShoot() {
+    if (!boss) return;
+    let dx = worm.x - boss.x, dy = worm.y - boss.y, len = Math.hypot(dx, dy);
+    if (len < 0.1) return;
+    let vx = (dx / len) * 2.5, vy = (dy / len) * 2.5;
+    bullets.push({ x: boss.x, y: boss.y, vx: vx, vy: vy, r: 4 });
+}
+function updateDefense() {
+    if (!active || isPaused) return;
+    
+    // Спавн врагов
+    if (!blackHoleMode) {
+        if (defenseWaveRemaining > 0 && defenseWave !== 20) {
+            defenseWaveSpawnTimer++;
+            if (defenseWaveSpawnTimer >= 60) {
+                defenseWaveSpawnTimer = 0;
+                let type = getEnemyTypeForWave(defenseWave);
+                spawnDefenseEnemy(type);
+                defenseWaveRemaining--;
+                waveEnemiesRemainingSpan.innerText = defenseWaveRemaining;
+            }
+        }
+    }
+    
+    // Атака башен
+    for (let i=0; i<towers.length; i++) {
+        let t = towers[i];
+        if (t.hp !== undefined && t.hp <= 0) { towers.splice(i,1); i--; continue; }
+        if (t.cooldown > 0) { t.cooldown--; continue; }
+        if (t.type === 'absolutedragon' && t.breathCooldown > 0) { t.breathCooldown--; }
+        
+        let target = null;
+        let closestDist = Infinity;
+        for (let e of enemies) {
+            if (e.type === 'blackholeboss') continue;
+            let dist = Math.hypot(t.x - e.x, t.y - e.y);
+            if (dist < t.range && dist < closestDist) { closestDist = dist; target = e; }
+        }
+        
+        if (target) {
+            attackLines.push({ fromX: t.x, fromY: t.y, toX: target.x, toY: target.y, timer: 5 });
+            if (t.type === 'carpet') { target.speed = Math.max(0.3, target.speed * 0.6); t.cooldown = 30; }
+            else if (t.type === 'water') { target.speed = Math.max(0.3, target.speed * 0.5); t.cooldown = 40; }
+            else if (t.type === 'lava') { for (let e of enemies) { if (Math.hypot(t.x - e.x, t.y - e.y) < 35) { e.hp -= 1; damageNumbers.push({ x: e.x, y: e.y-10, damage: 1, timer: 20 }); } } t.cooldown = 20; }
+            else if (t.type === 'obsidian') { target.hp -= t.damage; t.cooldown = 25; damageNumbers.push({ x: target.x, y: target.y-10, damage: t.damage, timer: 20 }); }
+            else if (t.type === 'absolutedragon') {
+                target.hp -= t.damage;
+                for (let e of enemies) { if (Math.hypot(target.x - e.x, target.y - e.y) < 40 && e !== target) { e.hp -= 3; damageNumbers.push({ x: e.x, y: e.y-10, damage: 3, timer: 20 }); } }
+                if (Math.random() < 0.2 && t.breathCooldown <= 0) {
+                    t.breathCooldown = 180;
+                    for (let e of enemies) { if (Math.hypot(t.x - e.x, t.y - e.y) < 70) { e.hp -= 15; e.onFire = 180; damageNumbers.push({ x: e.x, y: e.y-15, damage: 15, timer: 20 }); } }
+                    particles.push({ x: t.x, y: t.y, timer: 10, big: true });
+                }
+                t.cooldown = 20;
+                damageNumbers.push({ x: target.x, y: target.y-10, damage: t.damage, timer: 20 });
+            }
+            else { let dmg = t.damage || 2; target.hp -= dmg; t.cooldown = 20; damageNumbers.push({ x: target.x, y: target.y-10, damage: dmg, timer: 20 }); }
+            t.justAttacked = 5;
+            for (let i2=0; i2<enemies.length; i2++) { if (enemies[i2].hp <= 0) { score += (enemies[i2].reward || 15); updateUI(); enemies.splice(i2,1); i2--; } }
+        }
+    }
+    
+    // Босс чёрной дыры
+    if (blackHoleBossActive && blackHoleBoss) {
+        if (blackHoleBoss.attackCooldown <= 0) {
+            let closestTower = null;
+            let closestDist = Infinity;
+            for (let t of towers) {
+                let dist = Math.hypot(blackHoleBoss.x - t.x, blackHoleBoss.y - t.y);
+                if (dist < closestDist) { closestDist = dist; closestTower = t; }
+            }
+            if (closestTower && closestDist < 80) {
+                let damage = 0;
+                switch(closestTower.type) {
+                    case 'carpet': damage = 5; break;
+                    case 'stalagmite': damage = 10; break;
+                    case 'water': damage = 0; break;
+                    case 'lava': damage = 20; break;
+                    case 'diamond': damage = 30; break;
+                    case 'obsidian': damage = 200; break;
+                    case 'dragon': damage = 100; break;
+                    case 'absolutedragon': damage = 500; break;
+                    default: damage = 20;
+                }
+                closestTower.hp = (closestTower.hp || 100) - damage;
+                particles.push({ x: closestTower.x, y: closestTower.y, timer: 15, big: true });
+                if (closestTower.hp <= 0) { towers.splice(towers.indexOf(closestTower), 1); }
+                blackHoleBoss.attackCooldown = 60;
+            } else {
+                let target = defensePath[defensePath.length-1];
+                let dx = target.x - blackHoleBoss.x;
+                let dy = target.y - blackHoleBoss.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > 5) { blackHoleBoss.x += (dx / dist) * 1.5; blackHoleBoss.y += (dy / dist) * 1.5; }
+            }
+        } else { blackHoleBoss.attackCooldown--; }
+        
+        let dx = worm.x - blackHoleBoss.x;
+        let dy = worm.y - blackHoleBoss.y;
+        let dist = Math.hypot(dx, dy);
+        if (dist > 20) { blackHoleBoss.x += (dx / dist) * 1.2; blackHoleBoss.y += (dy / dist) * 1.2; }
+        blackHoleBoss.x = Math.min(Math.max(blackHoleBoss.x, 20), w-20);
+        blackHoleBoss.y = Math.min(Math.max(blackHoleBoss.y, 20), h-20);
+    }
+    
+    for (let i=0; i<attackLines.length; i++) { attackLines[i].timer--; if (attackLines[i].timer <= 0) attackLines.splice(i,1); }
+    for (let i=0; i<damageNumbers.length; i++) { damageNumbers[i].timer--; if (damageNumbers[i].timer <= 0) damageNumbers.splice(i,1); }
+    
+    for (let i=0; i<enemies.length; i++) {
+        let e = enemies[i];
+        if (e.type === 'blackholeboss') continue;
+        let target = defensePath[e.pathIndex];
+        let dx = target.x - e.x, dy = target.y - e.y;
+        let dist = Math.hypot(dx, dy);
+        if (dist < 3) {
+            e.pathIndex++;
+            if (e.pathIndex >= defensePath.length) {
+                enemies.splice(i,1);
+                chairHp--;
+                chairHpSpan.innerText = chairHp;
+                livesSpan.innerText = chairHp;
+                if (chairHp <= 0) { active = false; alert("СТУЛ РАЗРУШЕН! GAME OVER"); return; }
+                continue;
+            }
+        } else {
+            let step = Math.min(e.speed, dist);
+            e.x += dx / dist * step;
+            e.y += dy / dist * step;
+        }
+        if (e.onFire) { e.onFire--; if (e.onFire % 30 === 0) e.hp -= 2; }
+    }
+    
+    for (let i=0; i<enemies.length; i++) {
+        if (enemies[i].hp <= 0) {
+            score += (enemies[i].reward || 15);
+            updateUI();
+            enemies.splice(i,1);
+            i--;
+        }
+    }
+    
+    if (blackHoleMode && !blackHoleBossActive) {
+        function applyGravity(obj) {
+            let dx = obj.x - blackHoleX;
+            let dy = obj.y - blackHoleY;
+            let dist = Math.hypot(dx, dy);
+            if (dist < blackHoleRadius && dist > 10) {
+                let force = gravityStrength * (1 - dist / blackHoleRadius);
+                let angle = Math.atan2(dy, dx);
+                obj.x += Math.cos(angle) * force;
+                obj.y += Math.sin(angle) * force;
+            }
+        }
+        applyGravity(worm);
+        for (let e of enemies) applyGravity(e);
+        for (let t of towers) applyGravity(t);
+        for (let it of items) applyGravity(it);
+    }
+    
+    if (enemies.length === 0 && defenseWaveRemaining === 0 && !blackHoleMode) { checkDefenseWaveComplete(); }
+    if (blackHoleMode && !blackHoleBossActive && defenseWave === 20 && !blackHoleBossSpawned) { blackHoleBossSpawned = true; spawnDefenseEnemy('blackholeboss'); defenseWaveRemaining = 0; }
+    
+    if (items.length < 5 && Math.random()<0.03) spawnItem();
+    for (let i=0; i<items.length; i++) {
+        if (Math.hypot(worm.x - items[i].x, worm.y - items[i].y) < 15) {
+            items.splice(i,1);
+            score++;
+            updateUI();
+            spawnItem();
+            break;
+        }
+    }
+}
+function drawBackground() {
+    if (currentBackground === 'forest') {
+        ctx.fillStyle = "#4a6a3a"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < w + 40; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 20, h); ctx.strokeStyle = "#ebbc8c"; ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i - 20); ctx.stroke(); }
+    } else if (currentBackground === 'lava') {
+        ctx.fillStyle = "#8b3a1a"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < w + 20; i += 20) { ctx.fillStyle = "#f63"; ctx.beginPath(); ctx.arc(i, Math.sin(Date.now() / 500 + i) * 20 + h / 2, 5, 0, Math.PI * 2); ctx.fill(); }
+    } else if (currentBackground === 'ocean') {
+        ctx.fillStyle = "#2a5a8b"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < w + 40; i += 40) { ctx.beginPath(); ctx.moveTo(i, h / 2 + Math.sin(Date.now() / 500 + i) * 20); ctx.lineTo(i + 20, h / 2 + Math.sin(Date.now() / 500 + i + 20) * 20); ctx.strokeStyle = "#6af"; ctx.stroke(); }
+    } else if (currentBackground === 'void') {
+        ctx.fillStyle = "#1a1a2a"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < w + 50; i += 50) { ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(i, (Date.now() / 50 + i * 10) % h, 1, 0, Math.PI * 2); ctx.fill(); }
+    } else if (currentBackground === 'galaxy') {
+        ctx.fillStyle = "#2a1a3a"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < 100; i++) { ctx.fillStyle = `rgba(255,255,200,${Math.random() * 0.5})`; ctx.beginPath(); ctx.arc(Math.random() * w, Math.random() * h, 2, 0, Math.PI * 2); ctx.fill(); }
+    } else {
+        ctx.fillStyle = "#0a0a2a"; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < 100; i++) { ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.8})`; ctx.beginPath(); ctx.arc(Math.random() * w, Math.random() * h, 1.5, 0, Math.PI * 2); ctx.fill(); }
+    }
+}
+function draw() {
+    if (gameMode === "allornothing") {
+        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, w, h);
+        for (let s of spikes) { ctx.fillStyle = "#888888"; ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x-5, s.y+15); ctx.lineTo(s.x+5, s.y+15); ctx.fill(); }
+        ctx.fillStyle = "#dddddd"; ctx.beginPath(); ctx.ellipse(worm.x, worm.y, 10, 8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000000"; ctx.fillRect(worm.x-4, worm.y-3, 2, 3); ctx.fillRect(worm.x+2, worm.y-3, 2, 3);
+        ctx.fillStyle = "#dba55e"; ctx.font = "22px monospace"; ctx.fillText("🪑", w-45, h-25);
+    } else if (gameMode === "shadow") {
+        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, w, h);
+        for (let a of shadowAttacks) { if (a.type === 'scratch') { ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fillRect(a.x, a.y, a.ww, a.hh); } else if (a.type === 'laser') { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + Math.cos(a.angle)*30, a.y + Math.sin(a.angle)*30); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4; ctx.stroke(); } }
+        for (let d of shadowDragons) { ctx.fillStyle = "#555555"; ctx.beginPath(); ctx.ellipse(d.x, d.y, 15, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ffffff"; ctx.font = "16px monospace"; ctx.fillText("🐉", d.x-10, d.y+5); }
+        if (shadowBoss) { ctx.fillStyle = "#333333"; ctx.beginPath(); ctx.ellipse(shadowBoss.x, shadowBoss.y, 20, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ffffff"; ctx.font = "20px monospace"; ctx.fillText("💀", shadowBoss.x-12, shadowBoss.y+8); }
+        for (let it of shadowItems) { ctx.fillStyle = "#dba55e"; ctx.beginPath(); ctx.arc(it.x, it.y, it.r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ffffff"; ctx.font = "10px monospace"; ctx.fillText("🍞", it.x-5, it.y+4); }
+        ctx.fillStyle = "#dddddd"; ctx.beginPath(); ctx.ellipse(worm.x, worm.y, 10, 8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000000"; ctx.fillRect(worm.x-4, worm.y-3, 2, 3); ctx.fillRect(worm.x+2, worm.y-3, 2, 3);
+        ctx.fillStyle = "#ff4444"; ctx.beginPath(); ctx.ellipse(worm.x, worm.y-12, 6, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000000"; ctx.beginPath(); ctx.ellipse(worm.x, worm.y-12, 3, 3, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.font = "10px monospace"; ctx.fillText("♥", worm.x-3, worm.y-10);
+        ctx.fillStyle = "#ff3333"; ctx.fillRect(worm.x-12, worm.y-20, 24, 3);
+        ctx.fillStyle = "#33ff33"; ctx.fillRect(worm.x-12, worm.y-20, 24 * (wormShadowHp/500), 3);
+        if (lastAttackQuality) { ctx.fillStyle = "#ffffff"; ctx.font = "bold 16px monospace"; ctx.fillText(lastAttackQuality, w/2-50, 50); }
+        ctx.fillStyle = "#dba55e"; ctx.font = "22px monospace"; ctx.fillText("🪑", w-45, h-25);
+    } else if (isDefense) {
+        drawBackground();
+        ctx.beginPath(); ctx.moveTo(defensePath[0].x, defensePath[0].y);
+        for (let i=1; i<defensePath.length; i++) ctx.lineTo(defensePath[i].x, defensePath[i].y);
+        ctx.strokeStyle = "#dba55e"; ctx.lineWidth = 12; ctx.stroke();
+        ctx.fillStyle = "#dba55e"; ctx.font = "22px monospace"; ctx.fillText("🪑", defensePath[defensePath.length-1].x-12, defensePath[defensePath.length-1].y-8);
+        if (blackHoleMode && !blackHoleBossActive) {
+            ctx.fillStyle = "#000000"; ctx.beginPath(); ctx.arc(blackHoleX, blackHoleY, blackHoleRadius, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#ffffff"; ctx.font = "bold 16px monospace"; ctx.fillText("🌀", blackHoleX-8, blackHoleY+6);
+        }
+        for (let line of attackLines) { ctx.beginPath(); ctx.moveTo(line.fromX, line.fromY); ctx.lineTo(line.toX, line.toY); ctx.strokeStyle = `rgba(255, 200, 100, ${line.timer / 5})`; ctx.lineWidth = 3; ctx.stroke(); }
+        for (let t of towers) {
+            let isAttacking = t.justAttacked > 0;
+            if (isAttacking) { t.justAttacked--; ctx.fillStyle = "#ffffff"; } else { ctx.globalAlpha = 0.2; ctx.beginPath(); ctx.arc(t.x, t.y, t.range, 0, Math.PI*2); ctx.fillStyle = "#aaaaff"; ctx.fill(); ctx.globalAlpha = 1; }
+            let size = 8 * (t.type === 'absolutedragon' ? 1.2 : 1);
+            if (t.type === 'carpet') { ctx.fillStyle = "#8b5a3a"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size, size*0.7, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#d9945e"; ctx.fillText("🪤", t.x-5, t.y+3); }
+            else if (t.type === 'stalagmite') { ctx.fillStyle = "#888"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size*0.8, size, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("🗡️", t.x-5, t.y+3); }
+            else if (t.type === 'water') { ctx.fillStyle = "#6af"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size, size, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("💧", t.x-5, t.y+3); }
+            else if (t.type === 'lava') { ctx.fillStyle = "#f63"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size, size, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("🌋", t.x-5, t.y+3); }
+            else if (t.type === 'diamond') { ctx.fillStyle = "#acf"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size*0.7, size*0.7, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("💎", t.x-5, t.y+3); }
+            else if (t.type === 'dragon') { ctx.fillStyle = "#c63"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size*1.1, size*1.1, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("🐉", t.x-5, t.y+3); }
+            else if (t.type === 'obsidian') { ctx.fillStyle = "#3a1a5a"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size, size, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("🔮", t.x-5, t.y+3); }
+            else if (t.type === 'absolutedragon') { ctx.fillStyle = "#8b0000"; ctx.beginPath(); ctx.ellipse(t.x, t.y, size*1.3, size*1.3, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("🐉🔥", t.x-8, t.y+5); }
+            if (t.hp !== undefined && t.maxHp) { ctx.fillStyle = "#ff3333"; ctx.fillRect(t.x-12, t.y-18, 24, 3); ctx.fillStyle = "#33ff33"; ctx.fillRect(t.x-12, t.y-18, 24 * (t.hp/t.maxHp), 3); }
+        }
+        ctx.globalAlpha = 1;
+        for (let e of enemies) {
+            if (e.type === 'normal') { ctx.fillStyle = "#bd2f2f"; ctx.beginPath(); ctx.ellipse(e.x, e.y, 10, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#2d1f1a"; ctx.font = "14px monospace"; ctx.fillText("😈", e.x-6, e.y+4); }
+            else if (e.type === 'fast') { ctx.fillStyle = "#8b2f8b"; ctx.beginPath(); ctx.ellipse(e.x, e.y, 10, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("👾", e.x-6, e.y+4); }
+            else if (e.type === 'blackholeboss') { ctx.fillStyle = "#2a0a2a"; ctx.beginPath(); ctx.ellipse(e.x, e.y, 25, 25, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ff44ff"; ctx.font = "bold 24px monospace"; ctx.fillText("🌀👾", e.x-18, e.y+10); ctx.fillStyle = "#ffffff"; ctx.font = "10px monospace"; ctx.fillText(`${e.hp}/${e.maxHp} HP`, e.x-30, e.y-20); }
+            ctx.fillStyle = "#ff3333"; ctx.fillRect(e.x-12, e.y-15, 24, 4);
+            ctx.fillStyle = "#33ff33"; ctx.fillRect(e.x-12, e.y-15, 24 * (e.hp/e.maxHp), 4);
+            if (e.onFire) { ctx.fillStyle = "#ff6600"; ctx.beginPath(); ctx.arc(e.x, e.y, 12, 0, Math.PI*2); ctx.fill(); }
+        }
+        for (let num of damageNumbers) { ctx.fillStyle = `rgba(255, 50, 50, ${num.timer / 20})`; ctx.font = `bold ${12 + (20 - num.timer)/2}px monospace`; ctx.fillText(`-${num.damage}`, num.x, num.y - (20 - num.timer)); }
+        for (let it of items) { ctx.fillStyle = "#f7da6e"; ctx.beginPath(); ctx.arc(it.x, it.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#b46a2a"; ctx.fillText("ХЗ", it.x-6, it.y+4); }
+        for (let b of bedrocks) { ctx.fillStyle = "#2a2a2a"; ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, Math.PI*2); ctx.fill(); ctx.fillText("🪨", b.x-5, b.y+4); }
+        for (let o of obsidians) { ctx.fillStyle = "#3a1a5a"; ctx.beginPath(); ctx.arc(o.x, o.y, 7, 0, Math.PI*2); ctx.fill(); ctx.fillText("🔮", o.x-5, o.y+4); }
+        for (let p of pickaxes) { ctx.fillStyle = "#4a2a5a"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("⛏️", p.x-5, p.y+4); }
+        for (let l of lightnings) { ctx.fillStyle = "#ffff66"; ctx.beginPath(); ctx.arc(l.x, l.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("⚡", l.x-5, l.y+4); }
+        for (let s of skulls) { ctx.fillStyle = "#aaaaaa"; ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("💀", s.x-6, s.y+4); }
+        for (let laser of alienLasers) { ctx.beginPath(); ctx.moveTo(laser.x, laser.y); ctx.lineTo(laser.x + laser.vx * 5, laser.y + laser.vy * 5); ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = "#ff6666"; ctx.beginPath(); ctx.arc(laser.x, laser.y, 4, 0, Math.PI*2); ctx.fill(); }
+        for (let bull of bullets) { ctx.fillStyle = "#ff6666"; ctx.beginPath(); ctx.arc(bull.x, bull.y, bull.r-1, 0, Math.PI*2); ctx.fill(); ctx.fillText("💧", bull.x-4, bull.y+3); }
+        if (boss) { ctx.fillStyle = "#5a2a2a"; ctx.beginPath(); ctx.ellipse(boss.x, boss.y, 18, 18, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ff8888"; ctx.fillText("👾", boss.x-10, boss.y+8); ctx.fillStyle = "white"; ctx.fillText(`${boss.hp}/${boss.maxHp} HP`, boss.x-20, boss.y-12); }
+        for (let p of particles) { ctx.fillStyle = "#ffaa44"; ctx.beginPath(); ctx.arc(p.x, p.y, p.big ? 12 : 5, 0, Math.PI*2); ctx.fill(); }
+        ctx.fillStyle = "#ffaa88"; ctx.font = "12px monospace"; ctx.fillText(`СТУЛ HP: ${chairHp}`, w-80, h-38);
+        if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(0, 0, w, h); ctx.fillStyle = "#ffffff"; ctx.font = "20px monospace"; ctx.fillText("ПАУЗА", w/2-40, h/2); }
+    } else {
+        drawBackground();
+        for (let e of enemies) { ctx.fillStyle = "#bd2f2f"; ctx.beginPath(); ctx.ellipse(e.x, e.y, 9, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("😈", e.x-6, e.y+4); }
+        for (let e of fastEnemies) { ctx.fillStyle = "#8b2f8b"; ctx.beginPath(); ctx.ellipse(e.x, e.y, 9, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.fillText("👾", e.x-6, e.y+4); }
+        for (let a of alienEnemies) { ctx.fillStyle = "#2f8b2f"; ctx.beginPath(); ctx.ellipse(a.x, a.y, 11, 11, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ffff66"; ctx.fillText("👽", a.x-7, a.y+5); ctx.fillStyle = "#5a3a1a"; ctx.fillRect(a.x-12, a.y-12, 24, 4); ctx.fillStyle = "#aa66ff"; ctx.fillRect(a.x-12, a.y-12, (Math.min(2, window.obsidianCount || 0) / 2) * 24, 4); }
+        for (let it of items) { ctx.fillStyle = "#f7da6e"; ctx.beginPath(); ctx.arc(it.x, it.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("ХЗ", it.x-6, it.y+4); }
+        for (let b of bedrocks) { ctx.fillStyle = "#2a2a2a"; ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, Math.PI*2); ctx.fill(); ctx.fillText("🪨", b.x-5, b.y+4); }
+        for (let o of obsidians) { ctx.fillStyle = "#3a1a5a"; ctx.beginPath(); ctx.arc(o.x, o.y, 7, 0, Math.PI*2); ctx.fill(); ctx.fillText("🔮", o.x-5, o.y+4); }
+        for (let p of pickaxes) { ctx.fillStyle = "#4a2a5a"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("⛏️", p.x-5, p.y+4); }
+        for (let l of lightnings) { ctx.fillStyle = "#ffff66"; ctx.beginPath(); ctx.arc(l.x, l.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("⚡", l.x-5, l.y+4); }
+        for (let s of skulls) { ctx.fillStyle = "#aaaaaa"; ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillText("💀", s.x-6, s.y+4); }
+        for (let laser of alienLasers) { ctx.beginPath(); ctx.moveTo(laser.x, laser.y); ctx.lineTo(laser.x + laser.vx * 5, laser.y + laser.vy * 5); ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = "#ff6666"; ctx.beginPath(); ctx.arc(laser.x, laser.y, 4, 0, Math.PI*2); ctx.fill(); }
+        for (let bull of bullets) { ctx.fillStyle = "#ff6666"; ctx.beginPath(); ctx.arc(bull.x, bull.y, bull.r-1, 0, Math.PI*2); ctx.fill(); ctx.fillText("💧", bull.x-4, bull.y+3); }
+        if (boss) { ctx.fillStyle = "#5a2a2a"; ctx.beginPath(); ctx.ellipse(boss.x, boss.y, 18, 18, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ff8888"; ctx.fillText("👾", boss.x-10, boss.y+8); ctx.fillStyle = "white"; ctx.fillText(`${boss.hp}/${boss.maxHp} HP`, boss.x-20, boss.y-12); }
+        if (!invincible || Math.floor(Date.now()/100)%2===0) { ctx.fillStyle = "#f3c47a"; ctx.beginPath(); ctx.ellipse(worm.x, worm.y, 8, 6, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#ad7948"; ctx.fillRect(worm.x-4, worm.y-3, 2, 3); ctx.fillRect(worm.x+2, worm.y-3, 2, 3); ctx.fillStyle = "#231f12"; ctx.fillRect(worm.x-3, worm.y-2, 1, 2); ctx.fillRect(worm.x+2, worm.y-2, 1, 2); ctx.fillStyle = "#ffbc6e"; ctx.font = "16px monospace"; ctx.fillText("🐛", worm.x-5, worm.y-6); }
+        ctx.fillStyle = "#dba55e"; ctx.font = "22px monospace"; ctx.fillText("🪑", w-45, h-25);
+    }
+}
+function fullReset() {
+    active = true;
+    isPaused = false;
+    score = 0;
+    coins = 0;
+    revives = 3;
+    permanentSpeedBonus = 0;
+    speedBoostTimer = 0;
+    greed = 0;
+    greedBossSpawned = false;
+    greedEffects = { fog: false, shake: false, asteroids: false, goldenFraers: false };
+    updateGreedUI();
+    
+    blackHoleMode = false;
+    blackHoleBossActive = false;
+    blackHoleBoss = null;
+    blackHoleBossSpawned = false;
+    earthquakeTimer = 0;
+    
+    if (gameMode === "shadow") {
+        shadowMode = true;
+        shadowBoss = { x: w/2, y: 100, hp: 10000, maxHp: 10000, attackTimer: 0 };
+        shadowAttacks = [];
+        shadowDragons = [];
+        shadowItems = [];
+        wormShadowHp = 500;
+        attackCooldown = 0;
+        livesSpan.innerText = "500";
+        bossHpDisplaySpan.innerText = "👾 БОСС: 10000 HP";
+        timerDisplay.style.display = "none";
+        waveDisplaySpikes.style.display = "none";
+        defenseWaveInfo.style.display = "none";
+        attackJoystickDiv.style.display = "flex";
+        isDefense = false;
+        worm = { x: w/2, y: h/2, r: 8 };
+        items = []; bedrocks = []; obsidians = []; pickaxes = []; lightnings = [];
+        enemies = []; fastEnemies = []; alienEnemies = []; skulls = []; towers = []; bullets = []; alienLasers = []; particles = [];
+        boss = null;
+        attackLines = []; damageNumbers = [];
+        return;
+    }
+    
+    if (gameMode === "allornothing") {
+        allOrNothingTimer = 180;
+        spikes = [];
+        waveCount = 0;
+        spikeSpawnTimer = 0;
+        worm.hp = 3;
+        revives = 1;
+        livesSpan.innerText = "3";
+        timerDisplay.innerText = "⏱️ 180";
+        waveDisplaySpikes.innerText = "🌊 волна: 0/30";
+        timerDisplay.style.display = "inline";
+        waveDisplaySpikes.style.display = "inline";
+        attackJoystickDiv.style.display = "none";
+        isDefense = false;
+        worm = { x: w/2, y: h/2, r: 8 };
+        items = []; bedrocks = []; obsidians = []; pickaxes = []; lightnings = [];
+        enemies = []; fastEnemies = []; alienEnemies = []; skulls = []; towers = []; bullets = []; alienLasers = []; particles = [];
+        boss = null;
+        return;
+    }
+    
+    // Для классик/хард/безумно
+    isDefense = false;
+    lives = (gameMode === "hard") ? 2 : (gameMode === "crazy") ? 1 : 3;
+    livesSpan.innerText = lives;
+    chairHpSpan.innerText = "-";
+    joystickDiv.style.display = "flex";
+    towerPanel.style.display = "none";
+    pauseBtn.style.display = "none";
+    defenseWaveInfo.style.display = "none";
+    timerDisplay.style.display = "none";
+    waveDisplaySpikes.style.display = "none";
+    bossHpDisplaySpan.style.display = "inline";
+    attackJoystickDiv.style.display = "none";
+    
+    for (let i=0;i<5;i++) spawnItem();
+    for (let i=0;i<2;i++) spawnBedrock();
+    for (let i=0;i<1;i++) spawnPickaxe();
+    if (gameMode === "crazy") { for (let i=0;i<2;i++) spawnObsidian(); for (let i=0;i<2;i++) spawnAlienEnemy(); }
+    for (let i=0;i<2;i++) spawnEnemy();
+    if (gameMode === "hard") for (let i=0;i<1;i++) spawnFastEnemy();
+    worm = { x: w/2, y: h/2, r: 8 };
+    scoreSpan.innerText = "0";
+    coinSpan.innerText = "0";
+    updateUI();
+}
+function showMenu() {
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal';
+    let resetButton = '';
+    if (allModesBlocked) {
+        resetButton = '<button class="mode-btn reset" id="resetProgressBtn">⚠️ СБРОСИТЬ ПРОГРЕСС</button>';
+    }
+    modalDiv.innerHTML = `
+        <div class="modal-card">
+            <h2 style="color:#ffcc88;">ВЫБЕРИ РЕЖИМ</h2>
+            <div class="menu-columns">
+                <div class="menu-col">
+                    <h3>🎮 ОБЫЧНЫЕ</h3>
+                    <button class="mode-btn" id="modeClassic">КЛАССИК</button>
+                    <button class="mode-btn hard" id="modeHard">ХАРД</button>
+                    <button class="mode-btn crazy" id="modeCrazy">БЕЗУМНО</button>
+                    <button class="mode-btn defense" id="modeDefense">ДЕФЕНС</button>
+                    <button class="mode-btn harddefense" id="modeHardDefense">ХАРД ДЕФЕНС</button>
+                    <button class="mode-btn crazydefense" id="modeCrazyDefense">БЕЗУМНЫЙ ДЕФЕНС</button>
+                </div>
+                <div class="menu-col">
+                    <h3>🌀 КОСМИЧЕСКИЕ</h3>
+                    <button class="mode-btn blackhole" id="modeBlackHole">ЧЁРНАЯ ДЫРА</button>
+                    <button class="mode-btn greed" id="modeGreed">ЖАДНОСТЬ</button>
+                    <button class="mode-btn freedom" id="modeFreedom">СВОБОДА</button>
+                    <button class="mode-btn apocalypse" id="modeApocalypse">АПОКАЛИПСИС</button>
+                    <button class="mode-btn shadow" id="modeShadow">💀 ТЕНЬ (босс 10000 HP)</button>
+                    <button class="mode-btn allornothing" id="modeAllOrNothing">💀 ВСЁ ИЛИ НИЧЕГО</button>
+                </div>
+                <div class="menu-col">
+                    <h3>⚙️ СИСТЕМА</h3>
+                    <button class="mode-btn settings" id="settingsBtn">НАСТРОЙКИ</button>
+                    <button class="mode-btn achievements" id="achievementsBtn">ДОСТИЖЕНИЯ</button>
+                    ${resetButton}
+                </div>
+            </div>
+            <button class="mode-btn" id="closeMenu">ЗАКРЫТЬ</button>
+        </div>
+    `;
+    document.body.appendChild(modalDiv);
+    
+    modalDiv.querySelector('#modeClassic').onclick = () => { gameMode = "classic"; modeDisplaySpan.innerText = "КЛАССИК"; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeHard').onclick = () => { gameMode = "hard"; modeDisplaySpan.innerText = "ХАРД"; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeCrazy').onclick = () => { gameMode = "crazy"; modeDisplaySpan.innerText = "БЕЗУМНО"; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeDefense').onclick = () => { gameMode = "defense"; modeDisplaySpan.innerText = "ДЕФЕНС"; isDefense = true; fullReset(); modalDiv.remove(); startDefenseWave(); };
+    modalDiv.querySelector('#modeHardDefense').onclick = () => { gameMode = "harddefense"; modeDisplaySpan.innerText = "ХАРД ДЕФЕНС"; isDefense = true; defenseCostMultiplier = 2; fullReset(); modalDiv.remove(); startDefenseWave(); };
+    modalDiv.querySelector('#modeCrazyDefense').onclick = () => { gameMode = "crazydefense"; modeDisplaySpan.innerText = "БЕЗУМНЫЙ ДЕФЕНС"; isDefense = true; defenseCostMultiplier = 4; fullReset(); modalDiv.remove(); startDefenseWave(); };
+    modalDiv.querySelector('#modeBlackHole').onclick = () => { gameMode = "blackhole"; modeDisplaySpan.innerText = "ЧЁРНАЯ ДЫРА"; isDefense = true; fullReset(); modalDiv.remove(); startDefenseWave(); };
+    modalDiv.querySelector('#modeGreed').onclick = () => { gameMode = "greed"; modeDisplaySpan.innerText = "ЖАДНОСТЬ"; isDefense = false; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeFreedom').onclick = () => { gameMode = "freedom"; modeDisplaySpan.innerText = "СВОБОДА"; isDefense = false; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeApocalypse').onclick = () => { gameMode = "apocalypse"; modeDisplaySpan.innerText = "АПОКАЛИПСИС"; isDefense = false; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeShadow').onclick = () => { gameMode = "shadow"; modeDisplaySpan.innerText = "ТЕНЬ"; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#modeAllOrNothing').onclick = () => { gameMode = "allornothing"; modeDisplaySpan.innerText = "ВСЁ ИЛИ НИЧЕГО"; fullReset(); modalDiv.remove(); };
+    modalDiv.querySelector('#settingsBtn').onclick = () => { alert("Настройки появятся позже"); };
+    modalDiv.querySelector('#achievementsBtn').onclick = () => { showAchievementsMenu(); };
+    if (allModesBlocked && modalDiv.querySelector('#resetProgressBtn')) {
+        modalDiv.querySelector('#resetProgressBtn').onclick = () => { localStorage.clear(); location.reload(); };
+    }
+    modalDiv.querySelector('#closeMenu').onclick = () => { modalDiv.remove(); };
+}
+function showAchievementsMenu() {
+    const classicWin = localStorage.getItem('classicWin') === 'true';
+    const hardWin = localStorage.getItem('hardWin') === 'true';
+    const crazyWin = localStorage.getItem('crazyWin') === 'true';
+    const defenseWin = localStorage.getItem('defenseWin') === 'true';
+    const hardDefenseWin = localStorage.getItem('hardDefenseWin') === 'true';
+    const crazyDefenseWin = localStorage.getItem('crazyDefenseWin') === 'true';
+    const blackHoleWin = localStorage.getItem('blackHoleWin') === 'true';
+    const greedWin = localStorage.getItem('greedWin') === 'true';
+    const freedomWin = localStorage.getItem('freedomWin') === 'true';
+    const apocalypseWin = localStorage.getItem('apocalypseWin') === 'true';
+    const shadowWin = localStorage.getItem('shadowWin') === 'true';
+    const allOrNothingWin = localStorage.getItem('allOrNothingWin') === 'true';
+    
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal';
+    modalDiv.innerHTML = `
+        <div class="modal-card">
+            <h2 style="color:#ffcc88;">🏆 ДОСТИЖЕНИЯ 🏆</h2>
+            <p style="color:#ffdaaa; text-align:left; font-size:0.7rem;">
+                ${classicWin ? '✅' : '❌'} КЛАССИК: "хорошо!"<br>
+                ${hardWin ? '✅' : '❌'} ХАРД: "победитель"<br>
+                ${crazyWin ? '✅' : '❌'} БЕЗУМНО: "БОГ"<br>
+                ${defenseWin ? '✅' : '❌'} ДЕФЕНС: "Защитник"<br>
+                ${hardDefenseWin ? '✅' : '❌'} ХАРД ДЕФЕНС: "Хороший защитник"<br>
+                ${crazyDefenseWin ? '✅' : '❌'} БЕЗУМНЫЙ ДЕФЕНС: "БОГ ЗАЩИТЫ"<br>
+                ${blackHoleWin ? '✅' : '❌'} ЧЁРНАЯ ДЫРА: "ПОВЕЛИТЕЛЬ ВСЕЛЕННЫХ"<br>
+                ${greedWin ? '✅' : '❌'} ЖАДНОСТЬ: "ПОБЕДИТЕЛЬ ЖАДНОСТИ"<br>
+                ${freedomWin ? '✅' : '❌'} СВОБОДА: "АБСОЛЮТНЫЙ ТВОРЕЦ"<br>
+                ${apocalypseWin ? '✅' : '❌'} АПОКАЛИПСИС: "ВЫЖИВШИЙ"<br>
+                ${shadowWin ? '✅' : '❌'} ТЕНЬ: "САНС"<br>
+                ${allOrNothingWin ? '✅' : '❌'} ВСЁ ИЛИ НИЧЕГО: "КАК?"<br>
+            </p>
+            <button class="mode-btn" id="closeAchievements">◀ НАЗАД</button>
+        </div>
+    `;
+    document.body.appendChild(modalDiv);
+    modalDiv.querySelector('#closeAchievements').onclick = () => { modalDiv.remove(); };
+}
+    function updateGame() {
+        if (gameMode === "classic" || gameMode === "hard" || gameMode === "crazy" || gameMode === "greed" || gameMode === "freedom" || gameMode === "apocalypse") {
+            updateGameClassic();
+        } else if (gameMode === "defense" || gameMode === "harddefense" || gameMode === "crazydefense" || gameMode === "blackhole") {
+            updateDefense();
+        } else if (gameMode === "shadow") {
+            updateShadow();
+        } else if (gameMode === "allornothing") {
+            updateAllOrNothing();
+        }
+    }
+    
+    function gameLoop() { updateGame(); draw(); requestAnimationFrame(gameLoop); }
+    
+    resetBtn.onclick = () => fullReset();
+    menuBtn.onclick = () => showMenu();
+    pauseBtn.onclick = () => togglePause();
+    
+    try {
+        updateBotUI();
+        showMenu();
+        gameLoop();
+    } catch (error) {
+        console.error("Червяк 2.0: ошибка запуска:", error);
+        const errorBox = document.createElement("div");
+        errorBox.style.cssText = "position:fixed;inset:10px;z-index:99999;background:#260909;color:#fff;padding:20px;border:2px solid #ff5555;border-radius:15px;font:16px Arial;overflow:auto;";
+        errorBox.innerHTML = "<b>Ошибка запуска Червяка</b><br><br>" + String(error && error.stack || error);
+        document.body.appendChild(errorBox);
+    }
+})();
+</script>
+</body>
+</html>
